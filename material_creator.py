@@ -68,6 +68,8 @@ LIGHTMAP_COLOR = (1, 1, 1, 1)
 NORMAL_COLOR = (0.5, 0.5, 1, 1)
 GREY_COLOR = (0.5, 0.5, 0.5, 1)
 
+TEXTURE_SEARCH_DIR = r"Z:\ForHonorTool\exportlist_textures"
+
 
 if bpy.app.version < (4, 0):
     def new_input_socket(node_tree, socket_type, socket_name):
@@ -188,23 +190,50 @@ def getNodeGroup(node_tree, group):
 def makeImageFilepath(rootDir, textureFilename):
     return os.path.join(rootDir, textureFilename)
 
-def loadImage(textureFilepath):
-    textureFilename = os.path.basename(textureFilepath)
-    fileRoot, fileExt = os.path.splitext(textureFilename)
+def loadImage(material, suffix, search_dir=TEXTURE_SEARCH_DIR, extensions=(".png")):
 
-    if (os.path.isfile(textureFilepath)):
-        print("Loading Texture: " + textureFilename)
-        image = bpy.data.images.load(filepath=textureFilepath, check_existing=True)
-    else:
-        print("Warning. Texture not found " + textureFilename)
-        image = bpy.data.images.new(
-            name=textureFilename, width=1024, height=1024, alpha=True,
-            float_buffer=False)
-        image.source = 'FILE'
-        image.filepath = textureFilepath
-    image.alpha_mode = ALPHA_MODE_CHANNEL
+    if not os.path.isdir(search_dir):
+        print(f"[ImageLoader] Search directory does not exist: {search_dir}")
+        return None
+    if material.name.lower()[:-2].endswith("chest"):
+        suffix = "chest_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("torso"):
+        suffix = "torso_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("arms") | material.name.lower()[:-2].endswith("armrd") | material.name.lower()[:-2].endswith("armld") | material.name.lower()[:-2].endswith("armru") | material.name.lower()[:-2].endswith("armlu"):
+        suffix = "arms_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("helm") | material.name.lower()[:-2].endswith("helmet"):
+        suffix = "helm_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("face"):
+        suffix = "helm_face_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("legs"):
+        suffix = "legs_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("shoulderr"):
+        suffix = "shoulderr_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("shoulderl"):
+        suffix = "shoulderl_" + suffix.lower()
+    elif material.name.lower()[:-2].endswith("map"):
+        suffix = "specific_" + suffix.lower()
 
-    return image
+    for filename in os.listdir(search_dir):
+        name, ext = os.path.splitext(filename)
+
+        if ext.lower() not in extensions:
+            continue
+
+        if name.lower().endswith(suffix):
+            full_path = os.path.join(search_dir, filename)
+
+            # Avoid reloading if already in Blender
+            existing = bpy.data.images.get(filename)
+            if existing:
+                print(f"[ImageLoader] Using already loaded image: {filename}")
+                return existing
+
+            print(f"[ImageLoader] Loading image: {full_path}")
+            return bpy.data.images.load(full_path)
+
+    print(f"[ImageLoader] No texture found with suffix '{suffix}' in {search_dir}")
+    return None
 
 
 def newTextureSlot(materialData):
@@ -264,7 +293,7 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
 
     node_tree.links.new(xpsShadeNode.outputs['BSDF'], ouputNode.inputs['Surface'])
 
-    create_inputs(materialData)
+    create_inputs(materialData, xpsSettings)
 
 def find_fh_shader_node(material):
     node_tree = material.node_tree
@@ -294,14 +323,15 @@ def fh_shader_group():
     return bpy.data.node_groups.get(FH_SHADER_NODE)
 
 
-def create_inputs(material):
+def create_inputs(material, xpsSettings):
     fh_shader = find_fh_shader_node(material)
+    texpath = os.path.splitext(xpsSettings.filename)[0][:-3] + "textures"
 
-    input_diffuse = makeImageNode(material.node_tree, (-400, 0), loadImage("Z:\ForHonorTool\exportlist_textures\hero_knight_champion_costume01am_chest_DiffuseMap_CHRTM_1.png"), "sRGB", "Diffuse")
-    input_specular = makeImageNode(material.node_tree, (-400, -250), loadImage("Z:\ForHonorTool\exportlist_textures\hero_knight_champion_costume01am_chest_DiffuseMap_CHRTM_1.png"), "Non-Color", "Specular")
-    input_normal = makeImageNode(material.node_tree, (-400, -500), loadImage("Z:\ForHonorTool\exportlist_textures\hero_knight_champion_costume01am_chest_DiffuseMap_CHRTM_1.png"), "Non-Color", "Normal")
-    input_decal = makeImageNode(material.node_tree, (-400, -750), loadImage("Z:\ForHonorTool\exportlist_textures\hero_knight_champion_costume01am_chest_DiffuseMap_CHRTM_1.png"), "Non-Color", "Decal Mask")
-    input_mask = makeImageNode(material.node_tree, (-400, -1000), loadImage("Z:\ForHonorTool\exportlist_textures\hero_knight_champion_costume01am_chest_DiffuseMap_CHRTM_1.png"), "Non-Color", "Color Mask")
+    input_diffuse = makeImageNode(material.node_tree, (-400, 0), loadImage(material, "DiffuseMap_CHRTM_1", texpath, ".png"), "Diffuse", "sRGB")
+    input_specular = makeImageNode(material.node_tree, (-400, -250), loadImage(material, "SpecularMap_CHRTM_1", texpath, ".png"), "Specular", "Non-Color")
+    input_normal = makeImageNode(material.node_tree, (-400, -500), loadImage(material, "NormalMap_CHRTM_1", texpath, ".png"), "Normal", "Non-Color")
+    input_decal = makeImageNode(material.node_tree, (-400, -750), loadImage(material, "DecalMaskMap_CHRTM_1", texpath, ".png"), "Decal Mask", "Non-Color")
+    input_mask = makeImageNode(material.node_tree, (-400, -1000), loadImage(material, "ColorMaskMap_CHRTM_1", texpath, ".png"), "Color Mask", "Non-Color")
 
     # Diffuse
     material.node_tree.links.new(input_diffuse.outputs[0], fh_shader.inputs[0])
