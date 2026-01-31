@@ -188,7 +188,7 @@ def getNodeGroup(node_tree, group):
 def makeImageFilepath(rootDir, textureFilename):
     return os.path.join(rootDir, textureFilename)
 
-def loadImage(material, suffix, search_dir=TEXTURE_SEARCH_DIR, extensions=(".png")):
+def loadImage(material, suffix, search_dir, extensions=(".png")):
 
     if not os.path.isdir(search_dir):
         print(f"[ImageLoader] Search directory does not exist: {search_dir}")
