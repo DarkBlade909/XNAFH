@@ -29,8 +29,21 @@ def readXYZ(file):
     if len(values) < 3:
         return [0.0, 0.0, 0.0]
     x = (ascii_ops.getFloat(values[0]))  # X pos
-    y = (ascii_ops.getFloat(values[1]))  # Y pos
-    z = (ascii_ops.getFloat(values[2]))  # Z pos
+    y = (ascii_ops.getFloat(values[2]))  # Y pos
+    z = -(ascii_ops.getFloat(values[1]))  # Z pos
+    coords = [x, y, z]
+    return coords
+
+def readXZY(file):
+    line = ascii_ops.readline(file)
+    if not line:
+        return [0.0, 0.0, 0.0]
+    values = ascii_ops.splitValues(line)
+    if len(values) < 3:
+        return [0.0, 0.0, 0.0]
+    x = (ascii_ops.getFloat(values[0]))  # X pos
+    y = (ascii_ops.getFloat(values[2]))  # Y pos
+    z = -(ascii_ops.getFloat(values[1]))  # Z pos
     coords = [x, y, z]
     return coords
 
@@ -48,8 +61,8 @@ def read4Float(file):
     values = ascii_ops.splitValues(line)
     values = fillArray(values, 4, 0)
     x = (ascii_ops.getFloat(values[0]))
-    y = (ascii_ops.getFloat(values[1]))
-    z = (ascii_ops.getFloat(values[2]))
+    y = (ascii_ops.getFloat(values[2]))
+    z = (ascii_ops.getFloat(values[1]))
     w = (ascii_ops.getFloat(values[3]))
     coords = [x, y, z, w]
     return coords
@@ -118,7 +131,7 @@ def readBones(file):
             parentId = ascii_ops.readInt(file)
             if parentId is None:
                 parentId = -1
-            coords = readXYZ(file)
+            coords = readXZY(file)
 
             xpsBone = xps_types.XpsBone(boneId, boneName, coords, parentId)
             bones.append(xpsBone)
@@ -176,7 +189,7 @@ def readMeshes(file, hasBones):
                 
             for vertexId in range(vertexCount):
                 try:
-                    coord = readXYZ(file)
+                    coord = readXZY(file)
                     normal = readXYZ(file)
                     vertexColor = read4Int(file)
 

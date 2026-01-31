@@ -1,14 +1,14 @@
 schema_version = "1.0.0"
-id = "io_xnalara"
-name = "XPS Import/Export"
+id = "io_xnafh"
+name = "For Honor Import"
 version = "2.2.4" 
-tagline = "Import-Export for XNALara/XPS files"
-maintainer = "maylog"
+tagline = "Import For Honor files"
+maintainer = "DarkBlade909"
 type = "add-on"
 tags = ["Import-Export", "Pipeline"]
 blender_version_min = "5.0.0"
 license = ['SPDX:GPL-3.0-or-later']
-website = "https://github.com/mayloglog/XNALaraMesh-blender4.4"
+website = "https://github.com/DarkBlade909/XNAFH"
 source_repository = "https://github.com/johnzero7/XNALaraMesh"
 description = """
 FORKED VERSION: This is a maintained fork of the original XNALaraMesh addon.
@@ -26,5 +26,6 @@ credits = [
     "2025 johnzero7 – original XNALaraMesh developer",
     "2025 Clothoid & original XPS Tools contributors",
     "2025 XNALara/XPS community",
-    "2025 maylog – current maintainer, Blender 5.0+ update & Extensions submission"
+    "2025 maylog – Blender 5.0+ update & Extensions submission",
+    "2025 maylog – current maintainer, For Honor model support"
 ]

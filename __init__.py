@@ -1,6 +1,6 @@
 bl_info = {
-    "name": "XPS Import/Export",
-    "author": "maylog",
+    "name": "For Honor ASCII Import",
+    "author": "DarkBlade909",
     "version": (2, 2, 4),
     "blender": (5, 0, 0),
     "location": "File > Import-Export",
