@@ -68,8 +68,6 @@ LIGHTMAP_COLOR = (1, 1, 1, 1)
 NORMAL_COLOR = (0.5, 0.5, 1, 1)
 GREY_COLOR = (0.5, 0.5, 0.5, 1)
 
-TEXTURE_SEARCH_DIR = r"Z:\ForHonorTool\exportlist_textures"
-
 
 if bpy.app.version < (4, 0):
     def new_input_socket(node_tree, socket_type, socket_name):
