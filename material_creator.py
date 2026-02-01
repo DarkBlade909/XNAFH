@@ -235,7 +235,7 @@ def loadImage(material, suffix, search_dir):
         suffix = "shoulderr_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("shoulderl"):
         suffix = "shoulderl_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("map"):
+    elif material.name.lower()[:-2].endswith("map") | material.name.lower()[:-2].endswith("specific"):
         suffix = "specific_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("belt"):
         suffix = "chest_" + suffix.lower()
@@ -259,13 +259,13 @@ def loadImage(material, suffix, search_dir):
             directory, file = os.path.split(full_path)
 
             # Avoid reloading if already in Blender
-            pngexist = bpy.data.images.get(name + ".png")
-            ddsexist = bpy.data.images.get(name + ".dds")
+            pngexist = bpy.data.images.get(name)
+            ddsexist = bpy.data.images.get(name)
             if pngexist:
                 print(f"[ImageLoader] Using already loaded image: {name}.png")
                 return pngexist
             elif ddsexist:
-                print(f"[ImageLoader] Using already loaded image: {name}.dds")
+                print(f"[ImageLoader] Using already loaded image: {name}.tga")
                 return ddsexist
             
             print(f"[ImageLoader] Loading image: {full_path}")
