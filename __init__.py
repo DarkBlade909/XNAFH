@@ -53,6 +53,9 @@ modules = (
 )
 
 def register():
+    import addon_utils
+    if not addon_utils.check("blender_dds_addon")[0]:
+        print("XNAFH: 'Blender DDS Addon' is required for full functionality.")
     for mod in modules:
         if hasattr(mod, "register"):
             mod.register()
