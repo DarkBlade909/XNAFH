@@ -4,8 +4,8 @@ from . import import_xnalara_model
 from . import import_xnalara_pose
 
 
-class ArmatureBonesHideByName_Op(bpy.types.Operator):
-    bl_idname = 'xps_tools.bones_hide_by_name'
+class FHArmatureBonesHideByName_Op(bpy.types.Operator):
+    bl_idname = 'FH_tools.bones_hide_by_name'
     bl_label = 'Hide bones by name'
     bl_description = 'Move bones starting with "unused" to the armature layer 2'
     bl_options = {'PRESET'}
@@ -31,8 +31,8 @@ class ArmatureBonesHideByName_Op(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class ArmatureBonesHideByVertexGroup_Op(bpy.types.Operator):
-    bl_idname = 'xps_tools.bones_hide_by_vertex_group'
+class FHArmatureBonesHideByVertexGroup_Op(bpy.types.Operator):
+    bl_idname = 'FH_tools.bones_hide_by_vertex_group'
     bl_label = 'Hide bones by weight'
     bl_description = 'Move bones that do not alter any mesh to the armature layer 2'
     bl_options = {'PRESET'}
@@ -58,8 +58,8 @@ class ArmatureBonesHideByVertexGroup_Op(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class ArmatureBonesShowAll_Op(bpy.types.Operator):
-    bl_idname = 'xps_tools.bones_show_all'
+class FHArmatureBonesShowAll_Op(bpy.types.Operator):
+    bl_idname = 'FH_tools.bones_show_all'
     bl_label = 'Show all Bones'
     bl_description = 'Move all bones to the armature layer 1'
     bl_options = {'PRESET'}
@@ -85,8 +85,8 @@ class ArmatureBonesShowAll_Op(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class ArmatureBonesRenameToBlender_Op(bpy.types.Operator):
-    bl_idname = 'xps_tools.bones_rename_to_blender'
+class FHArmatureBonesRenameToBlender_Op(bpy.types.Operator):
+    bl_idname = 'FH_tools.bones_rename_to_blender'
     bl_label = 'Rename Bones'
     bl_description = 'Rename bones to Blender bone name convention (left -> .L)'
     bl_options = {'PRESET'}
@@ -106,8 +106,8 @@ class ArmatureBonesRenameToBlender_Op(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ArmatureBonesRenameToXps_Op(bpy.types.Operator):
-    bl_idname = 'xps_tools.bones_rename_to_xps'
+class FHArmatureBonesRenameToXps_Op(bpy.types.Operator):
+    bl_idname = 'FH_tools.bones_rename_to_xps'
     bl_label = 'Rename Bones'
     bl_description = 'Rename bones back to XPS (.L -> left)'
     bl_options = {'PRESET'}
@@ -127,8 +127,8 @@ class ArmatureBonesRenameToXps_Op(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ArmatureBonesConnect_Op(bpy.types.Operator):
-    bl_idname = 'xps_tools.bones_connect'
+class FHArmatureBonesConnect_Op(bpy.types.Operator):
+    bl_idname = 'FH_tools.bones_connect'
     bl_label = 'Set Bones Connection'
     bl_description = 'Set Bones Connection'
     bl_options = {'PRESET'}
@@ -154,8 +154,8 @@ class ArmatureBonesConnect_Op(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class NewRestPose_Op(bpy.types.Operator):
-    bl_idname = 'xps_tools.new_rest_pose'
+class FHNewRestPose_Op(bpy.types.Operator):
+    bl_idname = 'FH_tools.new_rest_pose'
     bl_label = 'New Rest Pose'
     bl_description = 'Set Current Pose as The New Rest Pose'
     bl_options = {"PRESET"}

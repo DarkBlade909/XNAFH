@@ -7,12 +7,11 @@ bl_info = {
     "description": "Community-maintained fork of the original XNALara/XPS Tools. Fully Blender 5.0+ compatible.",
     "category": "Import-Export",
     "support": "COMMUNITY",
-    "credits": "2025 johnzero7 (original author), 2025 Clothoid, 2025 XNALara/XPS community, 2025 maylog (Blender 5.0+ update & Extensions submission)",
+    "credits": "2025 johnzero7 (original author), 2025 Clothoid, 2025 XNALara/XPS community, 2025 maylog (Blender 5.0+ update & Extensions submission), 2026 DarkBlade909",
 }
 
 
 from . import (
-    xps_panels,
     xps_tools,
     xps_toolshelf,
     xps_const,
@@ -23,12 +22,8 @@ from . import (
     read_ascii_xps,
     read_bin_xps,
     mock_xps_data,
-    export_xnalara_model,
-    export_xnalara_pose,
     import_xnalara_model,
     import_xnalara_pose,
-    import_obj,
-    export_obj,
     ascii_ops,
     bin_ops,
     timing,
@@ -51,15 +46,10 @@ modules = (
     timing,
     ascii_ops,
     bin_ops,
-    import_obj,
-    export_obj,
     import_xnalara_model,
-    export_xnalara_model,
     import_xnalara_pose,
-    export_xnalara_pose,
     xps_tools,
     xps_toolshelf,
-    xps_panels,
 )
 
 def register():

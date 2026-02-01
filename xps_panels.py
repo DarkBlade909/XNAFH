@@ -1,7 +1,7 @@
 import bpy
 
 
-class _XpsPanels():
+class _FHPanels():
     """All XPS panel inherit from this."""
 
     bl_space_type = 'VIEW_3D'
@@ -10,9 +10,9 @@ class _XpsPanels():
     bl_context = 'objectmode'
 
 
-class XPSToolsObjectPanel(_XpsPanels, bpy.types.Panel):
-    bl_idname = 'XPS_PT_xps_tools_object'
-    bl_label = 'XPS Tools'
+class FHToolsObjectPanel(_FHPanels, bpy.types.Panel):
+    bl_idname = 'XPS_PT_FH_tools_object'
+    bl_label = 'FH Tools'
 
     def draw(self, context):
         layout = self.layout
@@ -26,21 +26,10 @@ class XPSToolsObjectPanel(_XpsPanels, bpy.types.Panel):
         r1c2 = r.column(align=True)
         r1c2.operator('xps_tools.import_pose', text='Pose')
 
-        # col.separator()
-        col = layout.column()
 
-        col.label(text="Export:")
-        c = col.column()
-        r = c.row(align=True)
-        r2c1 = r.column(align=True)
-        r2c1.operator('xps_tools.export_model', text='Model')
-        r2c2 = r.column(align=True)
-        r2c2.operator('xps_tools.export_pose', text='Pose')
-
-
-class XPSToolsBonesPanel(_XpsPanels, bpy.types.Panel):
-    bl_idname = 'XPS_PT_xps_tools_bones'
-    bl_label = 'XPS Bones'
+class FHToolsBonesPanel(_FHPanels, bpy.types.Panel):
+    bl_idname = 'XPS_PT_FH_tools_bones'
+    bl_label = 'FH Bones'
 
     @classmethod
     def poll(cls, context):
@@ -106,9 +95,9 @@ class XPSToolsBonesPanel(_XpsPanels, bpy.types.Panel):
             text='New Rest Pose')
 
 
-class XPSToolsAnimPanel(_XpsPanels, bpy.types.Panel):
-    bl_idname = 'XPS_PT_xps_tools_anim'
-    bl_label = 'XPS Anim'
+class FHToolsAnimPanel(_FHPanels, bpy.types.Panel):
+    bl_idname = 'XPS_PT_FH_tools_anim'
+    bl_label = 'FH Anim'
 
     @classmethod
     def poll(cls, context):
@@ -130,20 +119,12 @@ class XPSToolsAnimPanel(_XpsPanels, bpy.types.Panel):
         r.operator(
             'xps_tools.import_poses_to_keyframes',
             text='Poses to Keyframes')
-
-        # col.separator()
-        col = layout.column()
-
-        col.label(text='Export:')
-        c = col.column(align=True)
-        r = c.row(align=True)
-        r.operator('xps_tools.export_frames_to_poses', text='Frames to Poses')
 def register():
-    bpy.utils.register_class(XPSToolsObjectPanel)
-    bpy.utils.register_class(XPSToolsBonesPanel)
-    bpy.utils.register_class(XPSToolsAnimPanel)
+    bpy.utils.register_class(FHToolsObjectPanel)
+    bpy.utils.register_class(FHToolsBonesPanel)
+    bpy.utils.register_class(FHToolsAnimPanel)
 
 def unregister():
-    bpy.utils.unregister_class(XPSToolsObjectPanel)
-    bpy.utils.unregister_class(XPSToolsBonesPanel)
-    bpy.utils.unregister_class(XPSToolsAnimPanel)
+    bpy.utils.unregister_class(FHToolsObjectPanel)
+    bpy.utils.unregister_class(FHToolsBonesPanel)
+    bpy.utils.unregister_class(FHToolsAnimPanel)

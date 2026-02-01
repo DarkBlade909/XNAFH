@@ -1,5 +1,3 @@
-from . import export_xnalara_model
-from . import export_xnalara_pose
 from . import import_xnalara_model
 from . import import_xnalara_pose
 from . import material_creator
@@ -52,10 +50,10 @@ class CustomExportHelper(ExportHelper):
         return (change_ext or change_axis)
 
 @orientation_helper(axis_forward='-Y', axis_up='Z')
-class Import_Xps_Model_Op(bpy.types.Operator, ImportHelper):
+class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
     """Load a For Honor model."""
 
-    bl_idname = "xps_tools.import_model"
+    bl_idname = "xps_tools.import_fh_model"
     bl_label = "Import For Honor .ascii"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -136,7 +134,7 @@ class Import_Xps_Model_Op(bpy.types.Operator, ImportHelper):
     def menu_func(self, context):
         self.layout.operator_context = 'INVOKE_DEFAULT'
         self.layout.operator(
-            Import_Xps_Model_Op.bl_idname,
+            Import_FH_Model_Op.bl_idname,
             text="Text Export Operator")
 
     @classmethod
@@ -895,13 +893,13 @@ class ExportXpsNgff(bpy.types.Operator, ExportHelper):
         return export_obj.save(context, **keywords)
 
 
-class XpsImportSubMenu(bpy.types.Menu):
-    bl_idname = "OBJECT_MT_xnalara_import_submenu"
+class FHImportSubMenu(bpy.types.Menu):
+    bl_idname = "OBJECT_MT_FH_import_submenu"
     bl_label = "For Honor Model"
 
     def draw(self, context):
         layout = self.layout
-        layout.operator(Import_Xps_Model_Op.bl_idname, text="For Honor Model (.ascii)")
+        layout.operator(Import_FH_Model_Op.bl_idname, text="For Honor Model (.ascii)")
 
 
 #
@@ -909,12 +907,7 @@ class XpsImportSubMenu(bpy.types.Menu):
 #
 def menu_func_import(self, context):
     my_icon = custom_icons["main"]["xps_icon"]
-    self.layout.menu(XpsImportSubMenu.bl_idname, icon_value=my_icon.icon_id)
-
-
-def menu_func_export(self, context):
-    my_icon = custom_icons["main"]["xps_icon"]
-    self.layout.menu(XpsExportSubMenu.bl_idname, icon_value=my_icon.icon_id)
+    self.layout.menu(FHImportSubMenu.bl_idname, icon_value=my_icon.icon_id)
 
 
 # --------------------------------------------------------------------------------
@@ -939,25 +932,22 @@ def unregisterCustomIcon():
 
 
 def register():
-    # 注册所有操作器类
-    bpy.utils.register_class(Import_Xps_Model_Op)
+    bpy.utils.register_class(Import_FH_Model_Op)
     bpy.utils.register_class(ArmatureBoneDictGenerate_Op)
     bpy.utils.register_class(ArmatureBoneDictRename_Op)
     bpy.utils.register_class(ArmatureBoneDictRestore_Op)
     bpy.utils.register_class(ImportXpsNgff)
-    bpy.utils.register_class(XpsImportSubMenu)
+    bpy.utils.register_class(FHImportSubMenu)
     registerCustomIcon()
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
-    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 
 def unregister():
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
-    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
     unregisterCustomIcon()
-    bpy.utils.unregister_class(XpsImportSubMenu)
+    bpy.utils.unregister_class(FHImportSubMenu)
     bpy.utils.unregister_class(ArmatureBoneDictRestore_Op)
     bpy.utils.unregister_class(ArmatureBoneDictRename_Op)
     bpy.utils.unregister_class(ArmatureBoneDictGenerate_Op)
     bpy.utils.unregister_class(Import_Poses_To_Keyframes_Op)
-    bpy.utils.unregister_class(Import_Xps_Model_Op)
+    bpy.utils.unregister_class(Import_FH_Model_Op)
