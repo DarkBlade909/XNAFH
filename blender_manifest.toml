@@ -15,9 +15,7 @@ FORKED VERSION: This is a maintained fork of the original XNALaraMesh addon.
 Import and export XPS (XNALara/XPS) model files (.mesh, .xps) and pose data.
 Supports meshes, armatures, materials, textures, and animation.
 Features:
-• Import XPS models with bones and materials
-• Export models to XPS format
-• Pose import/export functionality
+• Import .ascii models with bones
 • Texture and material support
 Note: This is a community-maintained version with Blender 5.0+ compatibility.
 """
@@ -27,5 +25,5 @@ credits = [
     "2025 Clothoid & original XPS Tools contributors",
     "2025 XNALara/XPS community",
     "2025 maylog – Blender 5.0+ update & Extensions submission",
-    "2025 maylog – current maintainer, For Honor model support"
+    "2025 DarkBlade909 – current maintainer, For Honor model support"
 ]
