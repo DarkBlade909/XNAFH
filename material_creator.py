@@ -4,15 +4,9 @@ import random
 from mathutils import Vector
 from . import xps_material
 from . import xps_const
+from .import_dds import import_dds
 import importlib
 import addon_utils
-
-def get_dds_addon_module():
-    try:
-        # Attempt to import the DDS addon module
-        return importlib.import_module("blender_dds_addon")
-    except ImportError:
-        return None
 
 ALPHA_MODE_CHANNEL = 'CHANNEL_PACKED'
 # Nodes Layout
@@ -198,11 +192,7 @@ def makeImageFilepath(rootDir, textureFilename):
     return os.path.join(rootDir, textureFilename)
 
 def loadImage(material, suffix, search_dir):
-    # Is Blender DDS Addon enabled?
-    if addon_utils.check("blender_dds_addon")[1]:
-        extensions = (".png",".dds")
-    else:
-        extensions = ".png"
+    extensions = (".png",".dds")
     
     if not os.path.isdir(search_dir):
         print(f"[ImageLoader] Search directory does not exist: {search_dir}")
@@ -259,14 +249,10 @@ def loadImage(material, suffix, search_dir):
             directory, file = os.path.split(full_path)
 
             # Avoid reloading if already in Blender
-            pngexist = bpy.data.images.get(name)
-            ddsexist = bpy.data.images.get(name)
-            if pngexist:
-                print(f"[ImageLoader] Using already loaded image: {name}.png")
-                return pngexist
-            elif ddsexist:
-                print(f"[ImageLoader] Using already loaded image: {name}.tga")
-                return ddsexist
+            existing = bpy.data.images.get(name)
+            if existing:
+                print(f"[ImageLoader] Using already loaded image: {name}")
+                return existing
             
             print(f"[ImageLoader] Loading image: {full_path}")
 
@@ -280,7 +266,7 @@ def loadImage(material, suffix, search_dir):
 
                 # Load DDS
                 before = set(bpy.data.images)
-                bpy.ops.dds.import_dds('EXEC_DEFAULT', directory=directory + os.sep, files=[{"name": file}])
+                import_dds(bpy.context, full_path)
                 after = set(bpy.data.images)
                 new_images = after - before
 

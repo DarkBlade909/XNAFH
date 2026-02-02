@@ -10,7 +10,6 @@ bl_info = {
     "credits": "2025 johnzero7 (original author), 2025 Clothoid, 2025 XNALara/XPS community, 2025 maylog (Blender 5.0+ update & Extensions submission), 2026 DarkBlade909",
 }
 
-
 from . import (
     xps_tools,
     xps_toolshelf,
@@ -29,6 +28,10 @@ from . import (
     timing,
     material_creator,
     node_shader_utils,
+    import_dds,
+    custom_properties,
+    texconv,
+    astcenc,
 )
 
 
@@ -50,12 +53,12 @@ modules = (
     import_xnalara_pose,
     xps_tools,
     xps_toolshelf,
+    import_dds,
+    texconv,
+    astcenc,
 )
 
 def register():
-    import addon_utils
-    if not addon_utils.check("blender_dds_addon")[0]:
-        print("XNAFH: 'Blender DDS Addon' is required for full functionality.")
     for mod in modules:
         if hasattr(mod, "register"):
             mod.register()
@@ -64,3 +67,5 @@ def unregister():
     for mod in reversed(modules):
         if hasattr(mod, "unregister"):
             mod.unregister()
+    unload_texconv()
+    unload_astcenc()
