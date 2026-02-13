@@ -1,5 +1,6 @@
 import bpy
 import os
+from pathlib import Path
 import random
 from mathutils import Vector
 from . import xps_material
@@ -200,7 +201,7 @@ def loadImage(material, suffix, search_dir):
 
     # Texture Name Guessing :(
     suffix2 = "default"
-    if material.name.lower()[:-2].endswith("chest"):
+    if material.name.lower()[:-2].endswith("chest") | material.name.lower()[:-2].endswith("chestup"):
         suffix2 = "torso_" + suffix.lower()
         suffix = "chest_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("torso"):
@@ -209,17 +210,20 @@ def loadImage(material, suffix, search_dir):
     elif material.name.lower()[:-2].endswith("arms") | material.name.lower()[:-2].endswith("armrd") | material.name.lower()[:-2].endswith("armld") | material.name.lower()[:-2].endswith("armru") | material.name.lower()[:-2].endswith("armlu") | material.name.lower()[:-2].endswith("armsrd") | material.name.lower()[:-2].endswith("armsld") | material.name.lower()[:-2].endswith("armsru") | material.name.lower()[:-2].endswith("armslu") | material.name.lower()[:-2].endswith("armsu"):
         suffix = "arms_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("helm"):
+        suffix2 = "helmet_" + suffix.lower()
         suffix = "helm_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("helmet"):
+        suffix2 = "helm_" + suffix.lower()
         suffix = "helmet_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("face"):
         suffix = "helm_face_" + suffix.lower()
+        suffix2 = "helm_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("head"):
         suffix2 = "helm_" + suffix.lower()
         suffix = "head_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("hat"):
         suffix = "specific_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("legs"):
+    elif material.name.lower()[:-2].endswith("legs") | material.name.lower()[:-2].endswith("pants"):
         suffix = "legs_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("shoulderr"):
         suffix = "shoulderr_" + suffix.lower()
@@ -229,7 +233,7 @@ def loadImage(material, suffix, search_dir):
         suffix = "specific_" + suffix.lower()
     elif material.name.lower()[:-2].endswith("belt"):
         suffix = "chest_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("eyesteeth"):
+    elif material.name.lower()[:-2].endswith("eyesteeth") | material.name.lower().endswith("head_2") | material.name.lower().endswith("face_2"):
         suffix = "eye_" + suffix.lower()[:-8]
     else:
         suffix = "missing"
@@ -372,13 +376,19 @@ def fh_shader_group():
 
 def create_inputs(material, xpsSettings):
     fh_shader = find_fh_shader_node(material)
-    texpath = os.path.splitext(xpsSettings.filename)[0][:-3] + "textures"
+    # texpath = os.path.splitext(xpsSettings.filename)[0][:-3] + "textures"
+    
+    for item in Path(xpsSettings.filename).parent.iterdir():
+        if item.is_dir() and item.name.endswith("_textures"):
+            texpath = item
+            break
 
     input_diffuse = makeImageNode(material.node_tree, (-400, 0), loadImage(material, "DiffuseMap_CHRTM_1", texpath), "Diffuse", "sRGB")
     input_specular = makeImageNode(material.node_tree, (-400, -250), loadImage(material, "SpecularMap_CHRTM_1", texpath), "Specular", "Non-Color")
     input_normal = makeImageNode(material.node_tree, (-400, -500), loadImage(material, "NormalMap_CHRTM_1", texpath), "Normal", "Non-Color")
     input_decal = makeImageNode(material.node_tree, (-400, -750), loadImage(material, "DecalMaskMap_CHRTM_1", texpath), "Decal Mask", "Non-Color")
     input_mask = makeImageNode(material.node_tree, (-400, -1000), loadImage(material, "ColorMaskMap_CHRTM_1", texpath), "Color Mask", "Non-Color")
+    input_pattern = makeImageNode(material.node_tree, (-400, -1250), loadImage(material, "_TODO_", texpath), "Color Mask", "Non-Color")
 
     # Diffuse
     material.node_tree.links.new(input_diffuse.outputs[0], fh_shader.inputs[0])
@@ -397,3 +407,9 @@ def create_inputs(material, xpsSettings):
 
     # Material Mask
     material.node_tree.links.new(input_mask.outputs[0], fh_shader.inputs[5])
+
+    # Pattern
+    material.node_tree.links.new(input_pattern.outputs[0], fh_shader.inputs[14])
+
+    # Pattern Alpha
+    material.node_tree.links.new(input_pattern.outputs[1], fh_shader.inputs[15])

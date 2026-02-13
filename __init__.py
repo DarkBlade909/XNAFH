@@ -32,6 +32,7 @@ from . import (
     custom_properties,
     texconv,
     astcenc,
+    material_panel,
 )
 
 
@@ -56,6 +57,7 @@ modules = (
     import_dds,
     texconv,
     astcenc,
+    material_panel,
 )
 
 def register():
