@@ -214,7 +214,7 @@ def loadImage(material, texname, search_dir):
     else:
         target_name = '_MISSING_'
         target_name2 = '_MISSING_'
-
+        
     # Find texture
     for filename in os.listdir(search_dir):
         name, ext = os.path.splitext(filename)
@@ -238,10 +238,7 @@ def loadImage(material, texname, search_dir):
             # Avoid reloading if already in Blender
             existing = bpy.data.images.get(name)
             if existing:
-                print(f"[ImageLoader] Using already loaded image: {name}")
                 return existing
-            
-            print(f"[ImageLoader] Loading image: {full_path}")
 
             # DDS
             if ext.lower() == ".dds":
@@ -266,8 +263,10 @@ def loadImage(material, texname, search_dir):
             else:
                 return bpy.data.images.load(full_path)
 
+    # No texture found, load default
     print(f"[ImageLoader] No texture found with name {target_name} in {search_dir}")
-    return None
+    addon_dir = os.path.dirname(os.path.realpath(__file__))
+    return bpy.data.images.load(os.path.join(addon_dir, "resources", "_MISSING_.png"))
 
 
 def newTextureSlot(materialData):
@@ -379,7 +378,6 @@ def create_inputs(material, xpsSettings):
     for item in os.listdir(matpath):
         if item.startswith(matname):
             fh_material = item
-            print(f'Found material {matname}!')
             break
     
     # Read Material File
