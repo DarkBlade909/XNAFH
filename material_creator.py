@@ -192,65 +192,48 @@ def getNodeGroup(node_tree, group):
 def makeImageFilepath(rootDir, textureFilename):
     return os.path.join(rootDir, textureFilename)
 
-def loadImage(material, suffix, search_dir):
+def loadImage(material, texname, search_dir):
     extensions = (".png",".dds")
-    
+
     if not os.path.isdir(search_dir):
         print(f"[ImageLoader] Search directory does not exist: {search_dir}")
         return None
+    
+    # Fix name
+    if len(texname) > 8:
+        texname = texname[:-5] # Remove "Spec"
 
-    # Texture Name Guessing :(
-    suffix2 = "default"
-    if material.name.lower()[:-2].endswith("chest") | material.name.lower()[:-2].endswith("chestup"):
-        suffix2 = "torso_" + suffix.lower()
-        suffix = "chest_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("torso"):
-        suffix2 = "chest_" + suffix.lower()
-        suffix = "torso_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("arms") | material.name.lower()[:-2].endswith("armrd") | material.name.lower()[:-2].endswith("armld") | material.name.lower()[:-2].endswith("armru") | material.name.lower()[:-2].endswith("armlu") | material.name.lower()[:-2].endswith("armsrd") | material.name.lower()[:-2].endswith("armsld") | material.name.lower()[:-2].endswith("armsru") | material.name.lower()[:-2].endswith("armslu") | material.name.lower()[:-2].endswith("armsu"):
-        suffix = "arms_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("helm"):
-        suffix2 = "helmet_" + suffix.lower()
-        suffix = "helm_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("helmet"):
-        suffix2 = "helm_" + suffix.lower()
-        suffix = "helmet_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("face"):
-        suffix = "helm_face_" + suffix.lower()
-        suffix2 = "helm_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("head"):
-        suffix2 = "helm_" + suffix.lower()
-        suffix = "head_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("hat"):
-        suffix = "specific_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("legs") | material.name.lower()[:-2].endswith("pants"):
-        suffix = "legs_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("shoulderr"):
-        suffix = "shoulderr_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("shoulderl"):
-        suffix = "shoulderl_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("map") | material.name.lower()[:-2].endswith("specific"):
-        suffix = "specific_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("belt"):
-        suffix = "chest_" + suffix.lower()
-    elif material.name.lower()[:-2].endswith("eyesteeth") | material.name.lower().endswith("head_2") | material.name.lower().endswith("face_2"):
-        suffix = "eye_" + suffix.lower()[:-8]
+        # Check for both 'set01am' and 'set01aam'
+        if texname.find("set0"):
+            set_idx = texname.find("set0")
+            target_name = texname
+            target_name2 = texname[:set_idx+5] + 'a' + texname[set_idx+5:] # add extra 'a'
+        else:
+            target_name = texname
+            target_name2 = texname
     else:
-        suffix = "missing"
-        suffix2 = "missing"
+        target_name = '_MISSING_'
+        target_name2 = '_MISSING_'
 
+    # Find texture
     for filename in os.listdir(search_dir):
         name, ext = os.path.splitext(filename)
 
+        # Skip wrong filetype
         if ext.lower() not in extensions:
             continue
 
-        if suffix == "missing":
-            continue
-
-        if name.lower().endswith(suffix.lower()) | name.lower().endswith(suffix2.lower()):
+        if name == target_name or name == target_name2:
             full_path = os.path.join(search_dir, filename)
             directory, file = os.path.split(full_path)
+            
+            # Use high-res if possible
+            if os.path.exists(os.path.join(search_dir, name + "_CHRTM_0" + ext)):
+                name = name + "_CHRTM_0"
+                full_path = os.path.join(search_dir, name + ext)
+            elif os.path.exists(os.path.join(search_dir, name + "_CHRTM_1" + ext)):
+                name = name + "_CHRTM_1"
+                full_path = os.path.join(search_dir, name + ext)
 
             # Avoid reloading if already in Blender
             existing = bpy.data.images.get(name)
@@ -283,7 +266,7 @@ def loadImage(material, suffix, search_dir):
             else:
                 return bpy.data.images.load(full_path)
 
-    print(f"[ImageLoader] No texture found with suffix '{suffix}' or '{suffix2}' in {search_dir}")
+    print(f"[ImageLoader] No texture found with name {target_name} in {search_dir}")
     return None
 
 
@@ -376,19 +359,55 @@ def fh_shader_group():
 
 def create_inputs(material, xpsSettings):
     fh_shader = find_fh_shader_node(material)
-    # texpath = os.path.splitext(xpsSettings.filename)[0][:-3] + "textures"
     
-    for item in Path(xpsSettings.filename).parent.iterdir():
-        if item.is_dir() and item.name.endswith("_textures"):
-            texpath = item
-            break
+    parent = Path(xpsSettings.filename).parent
+    matpath = None
+    texpath = None
 
-    input_diffuse = makeImageNode(material.node_tree, (-400, 0), loadImage(material, "DiffuseMap_CHRTM_1", texpath), "Diffuse", "sRGB")
-    input_specular = makeImageNode(material.node_tree, (-400, -250), loadImage(material, "SpecularMap_CHRTM_1", texpath), "Specular", "Non-Color")
-    input_normal = makeImageNode(material.node_tree, (-400, -500), loadImage(material, "NormalMap_CHRTM_1", texpath), "Normal", "Non-Color")
-    input_decal = makeImageNode(material.node_tree, (-400, -750), loadImage(material, "DecalMaskMap_CHRTM_1", texpath), "Decal Mask", "Non-Color")
-    input_mask = makeImageNode(material.node_tree, (-400, -1000), loadImage(material, "ColorMaskMap_CHRTM_1", texpath), "Color Mask", "Non-Color")
-    input_pattern = makeImageNode(material.node_tree, (-400, -1250), loadImage(material, "_TODO_", texpath), "Color Mask", "Non-Color")
+    # Find texture/material paths
+    for item in parent.iterdir():
+        if item.is_dir():
+            if not matpath and item.name.endswith("materials"):
+                matpath = item
+            elif not texpath and item.name.endswith("_textures"):
+                texpath = item
+            if matpath and texpath:
+                break
+
+    # Find Material File
+    matname = material.name[-16:]
+    for item in os.listdir(matpath):
+        if item.startswith(matname):
+            fh_material = item
+            print(f'Found material {matname}!')
+            break
+    
+    # Read Material File
+    if fh_material:
+        with open(os.path.join(matpath, fh_material), "r") as mat_txt:
+            mat_data = mat_txt.readlines()
+            ColorMask = mat_data[0].split(' ')[-1]
+            DecalMask = mat_data[1].split(' ')[-1]
+            ClothMask = mat_data[2].split(' ')[-1]
+            DiffuseMap = mat_data[3].split(' ')[-1]
+            NormalMap = mat_data[4].split(' ')[-1]
+            SpecularMap = mat_data[5].split(' ')[-1]
+    else:
+        ColorMask = ''
+        DecalMask = ''
+        ClothMask = ''
+        DiffuseMap = ''
+        NormalMap = ''
+        SpecularMap = ''
+        print(f'Material not found! {matname}')
+
+    input_diffuse = makeImageNode(material.node_tree, (-400, 0), loadImage(material, DiffuseMap, texpath), "Diffuse", "sRGB")
+    input_specular = makeImageNode(material.node_tree, (-400, -250), loadImage(material, SpecularMap, texpath), "Specular", "Non-Color")
+    input_normal = makeImageNode(material.node_tree, (-400, -500), loadImage(material, NormalMap, texpath), "Normal", "Non-Color")
+    input_decal = makeImageNode(material.node_tree, (-400, -750), loadImage(material, DecalMask, texpath), "Decal Mask", "Non-Color")
+    input_mask = makeImageNode(material.node_tree, (-400, -1000), loadImage(material, ColorMask, texpath), "Color Mask", "Non-Color")
+    input_cloth = makeImageNode(material.node_tree, (-400, -1250), loadImage(material, "_TODO_", texpath), "Cloth Mask", "Non-Color")
+    input_pattern = makeImageNode(material.node_tree, (-400, -1500), loadImage(material, "_TODO_", texpath), "Color Mask", "Non-Color")
 
     # Diffuse
     material.node_tree.links.new(input_diffuse.outputs[0], fh_shader.inputs[0])
@@ -405,8 +424,11 @@ def create_inputs(material, xpsSettings):
     # Decal Mask
     material.node_tree.links.new(input_decal.outputs[0], fh_shader.inputs[4])
 
-    # Material Mask
+    # Color Mask
     material.node_tree.links.new(input_mask.outputs[0], fh_shader.inputs[5])
+
+    # Cloth Mask
+    material.node_tree.links.new(input_cloth.outputs[0], fh_shader.inputs[6])
 
     # Pattern
     material.node_tree.links.new(input_pattern.outputs[0], fh_shader.inputs[14])
