@@ -12,4 +12,4 @@ Main Features:
 
 ### Known Issues
 
-- Texture paths are merely guessed based on material name. This is not perfect and there will be many failed cases. Hopefully this can be fixed in a future update.
+- The For Honor Shader nodegroup is still WIP and may not match perfectly to the in-game look
