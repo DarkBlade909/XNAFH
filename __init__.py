@@ -2,7 +2,7 @@ bl_info = {
     "name": "For Honor ASCII Import",
     "author": "DarkBlade909",
     "version": (2, 2, 4),
-    "blender": (5, 0, 0),
+    "blender": (3, 6, 0),
     "location": "File > Import-Export",
     "description": "Community-maintained fork of the original XNALara/XPS Tools. Fully Blender 5.0+ compatible.",
     "category": "Import-Export",

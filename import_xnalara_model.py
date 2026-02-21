@@ -124,7 +124,7 @@ def xpsImport():
     armature_ob = createArmature()
     if armature_ob:
         linkToCollection(new_collection, armature_ob)
-        importBones(armature_ob) # 骨骼导入和编辑都在这里完成
+        importBones(armature_ob)
 
     meshes_obs = importMeshesList(armature_ob)
     for obj in meshes_obs:
@@ -134,7 +134,6 @@ def xpsImport():
     if armature_ob:
         armature_ob.pose.use_auto_ik = xpsSettings.autoIk
         hideUnusedBones([armature_ob])
-        # boneTailMiddleObject 已经被合并到 importBones 中，这里不再需要调用
         # boneTailMiddleObject(armature_ob, xpsSettings.connectBones)
 
     if xpsSettings.importDefaultPose and armature_ob and xpsData.header and xpsData.header.pose:
@@ -148,12 +147,9 @@ def setMinimumLenght(bone):
     if bone.length < default_length:
         bone.length = default_length
 
-# *** 移除 boneTailMiddleObject，其逻辑被合并到 importBones ***
-
 def setBoneConnect(connectBones):
     currMode = bpy.context.mode
     
-    # 优化：使用 try...finally 确保模式切换正确
     try:
         bpy.ops.object.mode_set(mode='EDIT', toggle=False)
         editBones = bpy.context.view_layer.objects.active.data.edit_bones
@@ -196,22 +192,42 @@ def recurBones(bone, vertexgroups, name):
     return visibleChain
 
 def _ensure_visibility_bones_collection(armature):
-    col = armature.collections.get("Visible Bones")
-    if col is None:
-        return armature.collections.new("Visible Bones")
-    return col
+    # Blender 4.x+
+    if hasattr(armature, "collections"):
+        col = armature.collections.get("Visible Bones")
+        if col is None:
+            col = armature.collections.new("Visible Bones")
+        return col
+
+    # Blender 3.6
+    return None
 
 def hideBone(bone):
     col = _ensure_visibility_bones_collection(bone.id_data)
-    col.unassign(bone)
+    if col:
+        col.unassign(bone)
+    else:
+        pass
 
 def showBone(bone):
-    col = _ensure_visibility_bones_collection(bone.id_data)
-    col.assign(bone)
+    arm_data = bone.id_data
+
+    # Blender 4.x+
+    if hasattr(arm_data, "collections"):
+        col = _ensure_visibility_bones_collection(arm_data)
+        col.assign(bone)
+
+    # Blender 3.6
+    else:
+        layer_index = 0
+        bone.layers[layer_index] = True
 
 def visibleBone(bone):
     col = _ensure_visibility_bones_collection(bone.id_data)
-    return bone.name in col.bones
+    if col:
+        return bone.name in col.bones
+    else:
+        pass
 
 def showAllBones(armature_objs):
     for armature in armature_objs:
@@ -269,13 +285,15 @@ def createArmature():
 def importBones(armature_ob):
     bones = xpsData.bones
 
-    # 优化：使用 try...finally 确保只切换模式一次，并在最后恢复
     bpy.context.view_layer.objects.active = armature_ob
     try:
         bpy.ops.object.mode_set(mode='EDIT')
-        
-        editBones = armature_ob.data.edit_bones
+
+        arm_data = armature_ob.data
+        editBones = arm_data.edit_bones
+
         newBoneName()
+
         for bone in bones:
             editBone = editBones.new(bone.name)
             addBoneName(editBone.name)
@@ -285,30 +303,39 @@ def importBones(armature_ob):
             editBone.tail = Vector(editBone.head) + Vector((0, 0, -.1))
             setMinimumLenght(editBone)
 
-        bones_collection = armature_ob.data.collections.new("Bones")
-        bones_collection.is_visible = False
-        visible_bones_collection = armature_ob.data.collections.new("Visible Bones")
+        # Blender 4.x+
+        if hasattr(arm_data, "collections"):
 
-        for bone in editBones:
-            bones_collection.assign(bone)
-            visible_bones_collection.assign(bone)
+            bones_collection = arm_data.collections.new("Bones")
+            bones_collection.is_visible = False
+
+            visible_bones_collection = arm_data.collections.new("Visible Bones")
+
+            for editBone in editBones:
+                bones_collection.assign(editBone)
+                visible_bones_collection.assign(editBone)
+
+        # Blender 3.6
+        else:
+            bones_layer = 0
+            visible_layer = 1
+
+            for editBone in editBones:
+                editBone.layers = [False] * 32
+                editBone.layers[bones_layer] = True
+                editBone.layers[visible_layer] = True
 
         for bone in bones:
             if bone.parentId >= 0:
                 editBone = editBones[bone.id]
                 editBone.parent = editBones[bone.parentId]
-        
-        # 将骨尾计算逻辑合并到这里，避免额外的模式切换
+
         boneTailMiddle(editBones, xpsSettings.connectBones)
 
     finally:
         bpy.ops.object.mode_set(mode='OBJECT')
-    
-    markSelected(armature_ob)
-    return armature_ob
 
 def boneTailMiddle(editBones, connectBones):
-    # 此函数现在在 EDIT 模式下调用，不需要切换模式
     twistboneRegex = r'\b(hip)?(twist|ctr|root|adj)\d*\b'
     for bone in editBones:
         if bone.name.lower() == "root ground" or not bone.parent:
@@ -321,7 +348,6 @@ def boneTailMiddle(editBones, connectBones):
                 childBones = [childBone for childBone in bone.children if not re.search(twistboneRegex, childBone.name)]
 
             if childBones:
-                # 优化：使用Vector的求和能力计算平均值
                 child_heads = [childBone.head for childBone in childBones]
                 avg_vector = sum(child_heads, Vector((0.0, 0.0, 0.0))) / len(child_heads)
                 bone.tail = avg_vector
@@ -432,7 +458,6 @@ def makeVertexDict(vertexDict, mergedVertList, uvLayers, vertColor, vertices):
 
     for vertex in vertices:
         vColor = vertex.vColor
-        # 优化：使用列表推导式代替 list(map)
         uvLayerAppend([uvTransform(uv_item) for uv_item in vertex.uv]) 
         vertColorAppend(list(map(rangeByteToFloat, vColor)))
         vertexID = getVertexId(vertex, mapVertexKeys, mergedVertList)
@@ -613,20 +638,50 @@ def makeBoneGroups(armature_ob, mesh_ob):
     color1 = material_creator.randomColor()
     color2 = material_creator.randomColor()
     color3 = material_creator.randomColor()
+
     bone_pose_surface_color = color1
     bone_pose_color = color2
     bone_pose_active_color = color3
 
-    bone_collection = armature_ob.data.collections.new(name=mesh_ob.name)
-    bone_collection.is_visible = False
-    vertexGroups = mesh_ob.vertex_groups.keys()
+    arm_data = armature_ob.data
     poseBones = armature_ob.pose.bones
-    for boneName in vertexGroups:
-        pose_bone = poseBones[boneName]
-        bone_collection.assign(pose_bone)
-        color = pose_bone.color
-        color.palette = 'CUSTOM'
-        custom_colors = color.custom
-        custom_colors.normal = bone_pose_surface_color
-        custom_colors.select = bone_pose_color
-        custom_colors.active = bone_pose_active_color
+    vertexGroups = mesh_ob.vertex_groups.keys()
+
+    # Blender 4.x+
+    if hasattr(arm_data, "collections"):
+        bone_collection = arm_data.collections.new(name=mesh_ob.name)
+        bone_collection.is_visible = False
+
+        for boneName in vertexGroups:
+            if boneName not in poseBones:
+                continue
+
+            pose_bone = poseBones[boneName]
+            bone_collection.assign(pose_bone)
+
+            color = pose_bone.color
+            color.palette = 'CUSTOM'
+            custom_colors = color.custom
+            custom_colors.normal = bone_pose_surface_color
+            custom_colors.select = bone_pose_color
+            custom_colors.active = bone_pose_active_color
+
+    # Blender 3.6
+    else:
+        layer_index = 0
+
+        bone_group = armature_ob.pose.bone_groups.new(name=mesh_ob.name)
+        bone_group.color_set = 'CUSTOM'
+        bone_group.colors.normal = bone_pose_surface_color
+        bone_group.colors.select = bone_pose_color
+        bone_group.colors.active = bone_pose_active_color
+
+        for boneName in vertexGroups:
+            if boneName not in poseBones:
+                continue
+
+            pose_bone = poseBones[boneName]
+
+            pose_bone.bone.layers[layer_index] = True
+
+            pose_bone.bone_group = bone_group

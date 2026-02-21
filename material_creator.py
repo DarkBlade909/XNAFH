@@ -321,8 +321,7 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
 
     ouputNode.location = xpsShadeNode.location + Vector((200, 0))
 
-    if useAlpha:
-        materialData.blend_method = 'HASHED'
+    materialData.blend_method = 'HASHED'
 
     node_tree.links.new(xpsShadeNode.outputs['BSDF'], ouputNode.inputs['Surface'])
 
@@ -343,7 +342,7 @@ def fh_shader_group():
 
     # Path to the blend file inside your addon
     addon_dir = os.path.dirname(os.path.realpath(__file__))
-    lib_path = os.path.join(addon_dir, "resources", "ForHonorShader.blend")
+    lib_path = os.path.join(addon_dir, "resources", "ForHonorShader3.blend")
 
     # Append the node group
     with bpy.data.libraries.load(lib_path, link=False) as (data_from, data_to):
