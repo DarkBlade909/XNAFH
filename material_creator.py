@@ -374,6 +374,7 @@ def create_inputs(material, xpsSettings):
 
     # Find Material File
     matname = material.name[-16:]
+    fh_material = None
     for item in os.listdir(matpath):
         if item.startswith(matname):
             fh_material = item
