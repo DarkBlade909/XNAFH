@@ -183,12 +183,6 @@ def getNodeGroup(node_tree, group):
     node = fh_shader_group()
     return node
 
-# def getNodeGroup(node_tree, group):
-#     node = node_tree.nodes.new(NODE_GROUP)
-#     node.node_tree = bpy.data.node_groups[group]
-#     return node
-
-
 def makeImageFilepath(rootDir, textureFilename):
     return os.path.join(rootDir, textureFilename)
 
@@ -200,7 +194,7 @@ def loadImage(material, texname, search_dir):
         return None
     
     # Fix name
-    if len(texname) > 8:
+    if texname != "_TODO_":
         texname = texname[:-5] # Remove "Spec"
 
         # Check for both 'set01am' and 'set01aam'
@@ -211,6 +205,7 @@ def loadImage(material, texname, search_dir):
         else:
             target_name = texname
             target_name2 = texname
+
     else:
         target_name = '_MISSING_'
         target_name2 = '_MISSING_'
@@ -222,19 +217,11 @@ def loadImage(material, texname, search_dir):
         # Skip wrong filetype
         if ext.lower() not in extensions:
             continue
-
-        if name == target_name or name == target_name2:
+        
+        if name == target_name or name == target_name2 or name[:-8] == target_name or name[:-8] == target_name2:
             full_path = os.path.join(search_dir, filename)
             directory, file = os.path.split(full_path)
             
-            # Use high-res if possible
-            if os.path.exists(os.path.join(search_dir, name + "_CHRTM_0" + ext)):
-                name = name + "_CHRTM_0"
-                full_path = os.path.join(search_dir, name + ext)
-            elif os.path.exists(os.path.join(search_dir, name + "_CHRTM_1" + ext)):
-                name = name + "_CHRTM_1"
-                full_path = os.path.join(search_dir, name + ext)
-
             # Avoid reloading if already in Blender
             existing = bpy.data.images.get(name)
             if existing:
@@ -265,8 +252,13 @@ def loadImage(material, texname, search_dir):
 
     # No texture found, load default
     print(f"[ImageLoader] No texture found with name {target_name} in {search_dir}")
-    addon_dir = os.path.dirname(os.path.realpath(__file__))
-    return bpy.data.images.load(os.path.join(addon_dir, "resources", "_MISSING_.png"))
+    # Avoid reloading if already in Blender
+    existing = bpy.data.images.get("_MISSING_.png")
+    if existing:
+        return existing
+    else:
+        addon_dir = os.path.dirname(os.path.realpath(__file__))
+        return bpy.data.images.load(os.path.join(addon_dir, "resources", "_MISSING_.png"))
 
 
 def newTextureSlot(materialData):
@@ -340,7 +332,6 @@ def fh_shader_group():
     if FH_SHADER_NODE in bpy.data.node_groups:
         return bpy.data.node_groups[FH_SHADER_NODE]
 
-    # Path to the blend file inside your addon
     addon_dir = os.path.dirname(os.path.realpath(__file__))
     lib_path = os.path.join(addon_dir, "resources", "ForHonorShader3.blend")
 
@@ -373,7 +364,7 @@ def create_inputs(material, xpsSettings):
                 break
 
     # Find Material File
-    matname = material.name[-16:]
+    matname = material.name[1:17]
     fh_material = None
     for item in os.listdir(matpath):
         if item.startswith(matname):
