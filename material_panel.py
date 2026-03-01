@@ -99,7 +99,7 @@ def register():
                 size = 4,
                 min = 0.0,
                 max = 1.0,
-                default = (1.0,1.0,1.0,1.0))
+                default = (0.5,0.5,0.5,1.0))
 
     bpy.types.Scene.palette_color2 = bpy.props.FloatVectorProperty(
                 name = "Palette Color 2",
@@ -107,7 +107,7 @@ def register():
                 size = 4,
                 min = 0.0,
                 max = 1.0,
-                default = (1.0,1.0,1.0,1.0))
+                default = (0.5,0.5,0.5,1.0))
 
     bpy.types.Scene.palette_color3 = bpy.props.FloatVectorProperty(
                 name = "Palette Color 3",
@@ -115,7 +115,7 @@ def register():
                 size = 4,
                 min = 0.0,
                 max = 1.0,
-                default = (1.0,1.0,1.0,1.0))
+                default = (0.5,0.5,0.5,1.0))
     ## SKIN COLOR
     bpy.types.Scene.skin_color = bpy.props.FloatVectorProperty(
                 name = "Skin Color",

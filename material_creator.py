@@ -222,11 +222,18 @@ def loadImage(material, texname, search_dir):
             full_path = os.path.join(search_dir, filename)
             directory, file = os.path.split(full_path)
             
-            # Avoid reloading if already in Blender
-            existing = bpy.data.images.get(name)
-            if existing:
-                return existing
-
+            ### Avoid reloading if already in Blender
+            # Blender 3/4 (Character limit is 63)
+            if bpy.app.version < (5, 0, 0):
+                existing = bpy.data.images.get(name[:63])
+                if existing:
+                    return existing
+            # Blender 5 (Character limit is 255)
+            else:
+                existing = bpy.data.images.get(name)
+                if existing:
+                    return existing
+            
             # DDS
             if ext.lower() == ".dds":
 
