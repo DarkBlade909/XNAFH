@@ -133,6 +133,9 @@ def xpsImport():
     for obj in meshes_obs:
         linkToCollection(new_collection, obj)
         markSelected(obj)
+        if armature_ob:
+            placeOrnament(armature_ob, obj)
+            placeWeapon(armature_ob, obj)
 
     if armature_ob:
         armature_ob.pose.use_auto_ik = xpsSettings.autoIk
@@ -141,6 +144,8 @@ def xpsImport():
 
     if xpsSettings.importDefaultPose and armature_ob and xpsData.header and xpsData.header.pose:
         import_xnalara_pose.setXpsPose(armature_ob, xpsData.header.pose)
+    
+
     return '{FINISHED}'
 
 def setMinimumLenght(bone):
@@ -691,3 +696,81 @@ def makeBoneGroups(armature_ob, mesh_ob):
             pose_bone.bone.layers[layer_index] = True
 
             pose_bone.bone_group = bone_group
+
+def placeOrnament(armature_ob, obj):
+    slots = ['A','B','C','Rank']
+    constraint = None
+    if obj:
+        match = obj.name.find("_Ornament_")
+        if match > 0:
+            print(f'Placing ornament: {obj.name}')
+
+            # Get Slot
+            if obj.name[-4:].lower() == "rank": # Rank slot
+                slot = "Rank"
+            else: # Letter slot
+                slot = obj.name[-1].upper()
+
+            if slot not in slots:
+                print(f"Couldn't find ornament slot {slot}, defaulting to A")
+                slot = 'A'
+
+            # Find ornament bone
+            arm_data = armature_ob.data
+            for bone in arm_data.bones:
+                if bone.name == (f"Ornament_Anchor_{slot}"):
+                    print(f"Attaching to bone {bone.name}")
+                    constraint = obj.constraints.new(type='COPY_TRANSFORMS')
+                    constraint.target = armature_ob
+                    constraint.subtarget = bone.name
+                    return None
+
+            # Ornament bone not found
+            print(f"Couldn't find anchor point: Ornament_Anchor_{slot}")
+            return None
+
+        # Ornament object not found
+        else:
+            return None
+
+def placeWeapon(armature_ob, obj):
+    slot = None
+    anchor_bone = None
+    constraint = None
+    if obj:
+        match = obj.name.find("_Weapon")
+        if match > 0:
+            print(f'Placing weapon: {obj.name}')
+
+            # Get Slot
+            match_hand = obj.name.find("_RHand_")
+            if match_hand > 0:
+                anchor_bone = "RightHand_Weapon_Ref"
+            else:
+                match_hand = obj.name.find("_LHand_")
+                if match_hand > 0:
+                    anchor_bone = "LeftHand_Weapon_Ref"
+                else:
+                    match_hand = obj.name.find("_SHand_")
+                    if match_hand > 0:
+                        anchor_bone = "LeftHand_Weapon_Ref"
+
+            # Find anchor bone
+            arm_data = armature_ob.data
+            for bone in arm_data.bones:
+                if bone.name == anchor_bone:
+                    print(f"Attaching to bone {bone.name}")
+                    constraint = obj.constraints.new(type='COPY_TRANSFORMS')
+                    constraint.target = armature_ob
+                    constraint.subtarget = bone.name
+                    return None
+
+            # Anchor bone not found
+            print(f"Couldn't find anchor point: {anchor_bone}")
+            return None
+
+        # Weapon object not found
+        else:
+            return None
+
+        
