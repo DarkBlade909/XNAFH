@@ -10,6 +10,9 @@ from . import read_ascii_xps
 from . import read_bin_xps
 from . import xps_types
 from . import material_creator
+
+import math
+import mathutils
 from mathutils import Vector
 
 rootDir = ''
@@ -280,6 +283,7 @@ def createArmature():
         armature_da.display_type = 'STICK'
         armature_ob = bpy.data.objects.new("Armature", armature_da)
         armature_ob.show_in_front = True
+
         return armature_ob
 
 def importBones(armature_ob):
@@ -294,14 +298,16 @@ def importBones(armature_ob):
 
         newBoneName()
 
-        for bone in bones:
-            editBone = editBones.new(bone.name)
-            addBoneName(editBone.name)
+        for bone in bones:            
+            quat = mathutils.Quaternion([float(bone.quat[3]), float(bone.quat[0]), float(bone.quat[1]), float(bone.quat[2])]).to_matrix().to_4x4()
+            locate = [float(bone.co[0]), float(bone.co[1]), float(bone.co[2])]
 
-            transformedBone = coordTransform(bone.co)
-            editBone.head = Vector(transformedBone)
-            editBone.tail = Vector(editBone.head) + Vector((0, 0, -.1))
-            setMinimumLenght(editBone)
+            editBone = editBones.new(bone.name)
+
+            editBone.head, editBone.tail = (0,0,0), (0, 0.1, 0)
+            editBone.matrix = mathutils.Matrix.Translation(locate) @ quat
+
+            addBoneName(editBone.name)
 
         # Blender 4.x+
         if hasattr(arm_data, "collections"):
@@ -330,7 +336,7 @@ def importBones(armature_ob):
                 editBone = editBones[bone.id]
                 editBone.parent = editBones[bone.parentId]
 
-        boneTailMiddle(editBones, xpsSettings.connectBones)
+        # boneTailMiddle(editBones, xpsSettings.connectBones)
 
     finally:
         bpy.ops.object.mode_set(mode='OBJECT')

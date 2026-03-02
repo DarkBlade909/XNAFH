@@ -3,10 +3,11 @@ from . import xps_const
 
 class XpsBone:
 
-    def __init__(self, id, name, co, parentId):
+    def __init__(self, id, name, co, parentId, quat):
         self.id = id
         self.name = name
         self.co = co
+        self.quat = quat
         self.parentId = parentId
 
 

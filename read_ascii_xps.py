@@ -47,6 +47,38 @@ def readXZY(file):
     coords = [x, y, z]
     return coords
 
+def readQuaternion(file):
+    line = ascii_ops.readline(file)
+    if not line:
+        return [0.0, 0.0, 0.0]
+    values = ascii_ops.splitValues(line)
+    if len(values) < 3:
+        return [0.0, 0.0, 0.0]
+    x = (ascii_ops.getFloat(values[3]))  # X rot
+    y = (ascii_ops.getFloat(values[5]))  # Y rot
+    z = -(ascii_ops.getFloat(values[4]))  # Z rot
+    w = (ascii_ops.getFloat(values[6]))  # W rot
+    quat = [x, y, z, w]
+    return quat
+
+def readTransform(file):
+    line = ascii_ops.readline(file)
+    if not line:
+        return [0.0, 0.0, 0.0]
+    values = ascii_ops.splitValues(line)
+    if len(values) < 3:
+        return [0.0, 0.0, 0.0]
+    x = (ascii_ops.getFloat(values[0]))  # X pos
+    y = (ascii_ops.getFloat(values[1]))  # Y pos
+    z = (ascii_ops.getFloat(values[2]))  # Z pos
+    quat_x = (ascii_ops.getFloat(values[3]))  # X rot
+    quat_y = (ascii_ops.getFloat(values[4]))  # Y rot
+    quat_z = (ascii_ops.getFloat(values[5]))  # Z rot
+    quat_w = (ascii_ops.getFloat(values[6]))  # W rot
+    coords = [x, y, z]
+    quat = [quat_x, quat_y, quat_z, quat_w]
+    return coords, quat
+
 
 def fillArray(array, minLen, value):
     # Complete the array with selected value
@@ -131,9 +163,11 @@ def readBones(file):
             parentId = ascii_ops.readInt(file)
             if parentId is None:
                 parentId = -1
-            coords = readXZY(file)
+            transform = readTransform(file)
+            coords = transform[0]
+            quat = transform[1]
 
-            xpsBone = xps_types.XpsBone(boneId, boneName, coords, parentId)
+            xpsBone = xps_types.XpsBone(boneId, boneName, coords, parentId, quat)
             bones.append(xpsBone)
     except Exception as e:
         print(f"Error reading bones: {e}")
