@@ -7,8 +7,10 @@ Original addon by XNALara community.
 
 Main Features:
 - Imports For Honor .ascii meshes with armatures
+- Automatically places ornaments and weapons
 - Automatically assigns textures to each material
 - Uses a custom For Honor material shader to match the in-game look
+- Includes a customization panel for choosing paint, material, and skin color
 
 ### Known Issues
 
