@@ -127,33 +127,6 @@ class FHArmatureBonesRenameToXps_Op(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FHArmatureBonesConnect_Op(bpy.types.Operator):
-    bl_idname = 'FH_tools.bones_connect'
-    bl_label = 'Set Bones Connection'
-    bl_description = 'Set Bones Connection'
-    bl_options = {'PRESET'}
-
-    connectBones: bpy.props.BoolProperty()
-
-    @classmethod
-    def poll(cls, context):
-        return bool(
-            next(
-                (obj for obj in context.selected_objects if obj.type == 'ARMATURE'),
-                None))
-
-    def execute(self, context):
-        armatures_obs = filter(
-            lambda obj: obj.type == 'ARMATURE',
-            context.selected_objects)
-        activeObj = bpy.context.active_object
-        for armature_ob in armatures_obs:
-            bpy.context.view_layer.objects.active = armature_ob
-            import_xnalara_model.setBoneConnect(self.connectBones)
-        bpy.context.view_layer.objects.active = activeObj
-        return {'FINISHED'}
-
-
 class FHNewRestPose_Op(bpy.types.Operator):
     bl_idname = 'FH_tools.new_rest_pose'
     bl_label = 'New Rest Pose'

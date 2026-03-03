@@ -22,12 +22,13 @@ class XpsBonePose:
 
 class XpsMesh:
 
-    def __init__(self, name, textures, vertices, faces, uvCount):
+    def __init__(self, name, textures, vertices, faces, uvCount, matName):
         self.name = name
         self.textures = textures
         self.vertices = vertices
         self.faces = faces
         self.uvCount = uvCount
+        self.matName = matName
 
 
 class BoneWeight:
@@ -110,22 +111,18 @@ class XpsImportSettings:
             uvDisplY,
             importDefaultPose,
             joinMeshRips,
-            joinMeshParts,
             markSeams,
             vColors,
-            connectBones,
-            autoIk,
+            prettyBones,
             importNormals):
         self.filename = filename
         self.uvDisplX = uvDisplX
         self.uvDisplY = uvDisplY
         self.importDefaultPose = importDefaultPose
         self.joinMeshRips = joinMeshRips
-        self.joinMeshParts = joinMeshParts
         self.markSeams = markSeams
         self.vColors = vColors
-        self.connectBones = connectBones
-        self.autoIk = autoIk
+        self.prettyBones = prettyBones
         self.importNormals = importNormals
 
 

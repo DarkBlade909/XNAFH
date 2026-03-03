@@ -183,7 +183,9 @@ def readMeshes(file, hasBones):
 
         for meshId in range(meshCount):
             # Name
-            meshName = ascii_ops.readString(file)
+            fullName = ascii_ops.readString(file)
+            meshName = fullName[18:]
+            matName = fullName[:17]
             if not meshName:
                 meshName = f'Mesh_{meshId}'
             # print('Mesh Name:', meshName)
@@ -266,7 +268,7 @@ def readMeshes(file, hasBones):
                     continue
                     
             xpsMesh = xps_types.XpsMesh(
-                meshName, textures, vertex, faces, uvLayerCount)
+                meshName, textures, vertex, faces, uvLayerCount, matName)
             meshes.append(xpsMesh)
     except Exception as e:
         print(f"Error reading meshes: {e}")

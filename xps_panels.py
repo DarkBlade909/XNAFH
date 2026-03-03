@@ -77,16 +77,6 @@ class FHToolsBonesPanel(_FHPanels, bpy.types.Panel):
 
         col = layout.column()
 
-        col.label(text='Connect Bones:')
-        c = col.column(align=True)
-        r = c.row(align=True)
-        r.operator(
-            'xps_tools.bones_connect',
-            text='Connect All').connectBones = True
-        r = c.row(align=True)
-        r.operator(
-            'xps_tools.bones_connect',
-            text='Disconnect All').connectBones = False
         col.label(text='New Rest Pose:')
         c = col.column(align=True)
         r = c.row(align=True)

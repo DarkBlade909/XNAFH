@@ -13,7 +13,9 @@ from . import material_creator
 
 import math
 import mathutils
+from math import radians
 from mathutils import Vector
+from mathutils import Matrix
 
 rootDir = ''
 blenderBoneNames = []
@@ -21,6 +23,14 @@ MIN_BONE_LENGHT = 0.005
 xpsData = None
 xpsSettings = None
 
+anchor_bones = [
+    "RightHand_Weapon_Ref",
+    "LeftHand_Weapon_Ref",
+    "Ornament_Anchor_A",
+    "Ornament_Anchor_B",
+    "Ornament_Anchor_C",
+    "Ornament_Anchor_Rank"
+]
 def newBoneName():
     global blenderBoneNames
     blenderBoneNames = []
@@ -138,9 +148,7 @@ def xpsImport():
             placeWeapon(armature_ob, obj)
 
     if armature_ob:
-        armature_ob.pose.use_auto_ik = xpsSettings.autoIk
         hideUnusedBones([armature_ob])
-        # boneTailMiddleObject(armature_ob, xpsSettings.connectBones)
 
     if xpsSettings.importDefaultPose and armature_ob and xpsData.header and xpsData.header.pose:
         import_xnalara_pose.setXpsPose(armature_ob, xpsData.header.pose)
@@ -154,21 +162,6 @@ def setMinimumLenght(bone):
         bone.tail = bone.head - Vector((0, .001, 0))
     if bone.length < default_length:
         bone.length = default_length
-
-def setBoneConnect(connectBones):
-    currMode = bpy.context.mode
-    
-    try:
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
-        editBones = bpy.context.view_layer.objects.active.data.edit_bones
-        connectEditBones(editBones, connectBones)
-    finally:
-        bpy.ops.object.mode_set(mode=currMode, toggle=False)
-
-def connectEditBones(editBones, connectBones):
-    for bone in editBones:
-        if bone.parent and bone.head == bone.parent.tail:
-            bone.use_connect = connectBones
 
 def hideBonesByName(armature_objs):
     for armature in armature_objs:
@@ -285,7 +278,10 @@ def createArmature():
         print('Import armature', str(boneCount), 'bones')
 
         armature_da = bpy.data.armatures.new("Armature")
-        armature_da.display_type = 'STICK'
+        if xpsSettings.prettyBones:
+            armature_da.display_type = 'OCTAHEDRAL'
+        else:
+            armature_da.display_type = 'STICK'
         armature_ob = bpy.data.objects.new("Armature", armature_da)
         armature_ob.show_in_front = True
 
@@ -303,7 +299,7 @@ def importBones(armature_ob):
 
         newBoneName()
 
-        for bone in bones:            
+        for bone in bones:
             quat = mathutils.Quaternion([float(bone.quat[3]), float(bone.quat[0]), float(bone.quat[1]), float(bone.quat[2])]).to_matrix().to_4x4()
             locate = [float(bone.co[0]), float(bone.co[1]), float(bone.co[2])]
 
@@ -311,6 +307,26 @@ def importBones(armature_ob):
 
             editBone.head, editBone.tail = (0,0,0), (0, 0.1, 0)
             editBone.matrix = mathutils.Matrix.Translation(locate) @ quat
+
+            if xpsSettings.prettyBones and bone.name not in anchor_bones:
+                # # local axes of the bone
+                # x, y, z = editBone.matrix.to_3x3().col
+                # # rotation matrix 30 degrees around local x axis thru head
+                # R = (Matrix.Translation(editBone.head) @
+                #     Matrix.Rotation(radians(-90), 4, z) @
+                #     Matrix.Translation(-editBone.head)
+                #     )
+                # #bone.matrix = R @ bone.matrix
+                # editBone.transform(R) 
+
+                
+                old_head = editBone.head.copy()
+                R = Matrix.Rotation(radians(-90), 4, editBone.z_axis.normalized())   
+                editBone.transform(R, roll=True) 
+                offset_vec = -(editBone.head - old_head)
+                editBone.head += offset_vec
+                editBone.tail += offset_vec
+            
 
             addBoneName(editBone.name)
 
@@ -341,39 +357,8 @@ def importBones(armature_ob):
                 editBone = editBones[bone.id]
                 editBone.parent = editBones[bone.parentId]
 
-        # boneTailMiddle(editBones, xpsSettings.connectBones)
-
     finally:
         bpy.ops.object.mode_set(mode='OBJECT')
-
-def boneTailMiddle(editBones, connectBones):
-    twistboneRegex = r'\b(hip)?(twist|ctr|root|adj)\d*\b'
-    for bone in editBones:
-        if bone.name.lower() == "root ground" or not bone.parent:
-            bone.tail = bone.head.xyz + Vector((0, -.5, 0))
-        else:
-            if visibleBone(bone):
-                childBones = [childBone for childBone in bone.children
-                              if visibleBone(childBone) and not re.search(twistboneRegex, childBone.name)]
-            else:
-                childBones = [childBone for childBone in bone.children if not re.search(twistboneRegex, childBone.name)]
-
-            if childBones:
-                child_heads = [childBone.head for childBone in childBones]
-                avg_vector = sum(child_heads, Vector((0.0, 0.0, 0.0))) / len(child_heads)
-                bone.tail = avg_vector
-            else:
-                if bone.parent is not None:
-                    if bone.head != bone.parent.tail:
-                        delta = bone.head - bone.parent.tail
-                    else:
-                        delta = bone.parent.tail - bone.parent.head
-                    bone.tail = bone.head + delta
-
-    for bone in editBones:
-        setMinimumLenght(bone)
-
-    connectEditBones(editBones, connectBones)
 
 def markSelected(ob):
     ob.select_set(state=True)
@@ -393,51 +378,8 @@ def makeUvs(mesh_da, faces, uvData, vertColors):
                 uvCoor = uvData[faceVert][layerIdx]
                 uvLayer.data[loopdId].uv = Vector(uvCoor)
 
-def createJoinedMeshes():
-    meshPartRegex = re.compile(r'(!.*)*([\d]+nPart)*!')
-    sortedMeshesList = sorted(xpsData.meshes, key=operator.attrgetter('name'))
-    joinedMeshesNames = list({meshPartRegex.sub('', mesh.name, 0) for mesh in sortedMeshesList})
-    joinedMeshesNames.sort()
-    newMeshes = []
-    for joinedMeshName in joinedMeshesNames:
-        meshesToJoin = [mesh for mesh in sortedMeshesList if meshPartRegex.sub('', mesh.name, 0) == joinedMeshName]
-
-        totalVertexCount = 0
-        vertexCount = 0
-        meshCount = 0
-
-        meshName = meshPartRegex.sub('', meshesToJoin[0].name, 0)
-        textures = meshesToJoin[0].textures
-        uvCount = meshesToJoin[0].uvCount
-        vertex = []
-        faces = []
-        for mesh in meshesToJoin:
-            vertexCount = 0
-            meshCount += 1
-
-            if len(meshesToJoin) > 1 or meshesToJoin[0] not in sortedMeshesList:
-                for vert in mesh.vertices:
-                    vertexCount += 1
-                    newVertice = xps_types.XpsVertex(
-                        vert.id + totalVertexCount, vert.co, vert.norm, vert.vColor, vert.uv, vert.boneWeights)
-                    vertex.append(newVertice)
-                for face in mesh.faces:
-                    newFace = [face[0] + totalVertexCount, face[1] + totalVertexCount, face[2] + totalVertexCount]
-                    faces.append(newFace)
-            else:
-                vertex = mesh.vertices
-                faces = mesh.faces
-            totalVertexCount += vertexCount
-
-        xpsMesh = xps_types.XpsMesh(meshName, textures, vertex, faces, uvCount)
-        newMeshes.append(xpsMesh)
-    return newMeshes
-
 def importMeshesList(armature_ob):
-    if xpsSettings.joinMeshParts:
-        newMeshes = createJoinedMeshes()
-    else:
-        newMeshes = xpsData.meshes
+    newMeshes = xpsData.meshes
     importedMeshes = [importMesh(armature_ob, meshInfo) for meshInfo in newMeshes]
     return [mesh for mesh in importedMeshes if mesh]
 

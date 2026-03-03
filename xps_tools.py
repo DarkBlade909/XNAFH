@@ -106,21 +106,9 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
         default=True,
     )
 
-    joinMeshParts: bpy.props.BoolProperty(
-        name="Join MeshParts",
-        description="Join MeshParts (meshes that contain 'nPart!' in the name)",
-        default=True,
-    )
-
-    connectBones: bpy.props.BoolProperty(
-        name="Connect Bones",
-        description="Connect Bones all bones",
-        default=True,
-    )
-
-    autoIk: bpy.props.BoolProperty(
-        name="AutoIK",
-        description="Set AutoIK",
+    prettyBones: bpy.props.BoolProperty(
+        name="Pretty Bones",
+        description="Set Pretty Bones",
         default=True,
     )
 
@@ -149,11 +137,9 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
             self.uvDisplY,
             self.impDefPose,
             self.joinMeshRips,
-            self.joinMeshParts,
             self.markSeams and self.joinMeshRips,
             self.vColors,
-            self.connectBones,
-            self.autoIk,
+            self.prettyBones,
             self.importNormals
         )
         material_creator.create_group_nodes()
@@ -171,7 +157,6 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
 
         col = layout.column(align=True)
         col.label(text='Mesh')
-        col.prop(self, "joinMeshParts")
         col.prop(self, "joinMeshRips")
         sub = col.row()
         sub.prop(self, "markSeams")
@@ -184,8 +169,7 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
         col = layout.column(align=True)
         col.label(text='Armature')
         col.prop(self, "impDefPose")
-        col.prop(self, "connectBones")
-        col.prop(self, "autoIk")
+        col.prop(self, "prettyBones")
 
 
 class Export_Xps_Model_Op(bpy.types.Operator, CustomExportHelper):

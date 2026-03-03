@@ -279,12 +279,24 @@ def newTextureSlot(materialData):
 
 def makeMaterial(xpsSettings, rootDir, mesh_da, meshInfo, flags):
     # Create the material for Nodes
-    meshFullName = meshInfo.name
-    materialData = bpy.data.materials.new(meshFullName)
-    mesh_da.materials.append(materialData)
+    matName = meshInfo.matName
+    materialData = None
 
-    # Create
-    makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, flags)
+    # Check if material exists
+    for mat in bpy.data.materials:
+        print(mat.name)
+        if mat.name == matName:
+            materialData = mat
+
+    if materialData:
+        print(f"Using existing material {matName}")
+        mesh_da.materials.append(materialData)
+    else:
+        print(f"Creating new material {matName}")
+        materialData = bpy.data.materials.new(matName)
+        mesh_da.materials.append(materialData)
+        # Create
+        makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, flags)
 
 
 def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, flags):
@@ -293,8 +305,8 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
     node_tree = materialData.node_tree
     node_tree.nodes.clear()
 
-    meshFullName = materialData.name
-    renderType = xps_material.makeRenderType(meshFullName)
+    matName = materialData.name
+    renderType = xps_material.makeRenderType(matName)
     renderGroup = xps_material.RenderGroup(renderType)
     param1 = renderType.texRepeater1
     param2 = renderType.texRepeater2
