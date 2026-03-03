@@ -284,7 +284,6 @@ def makeMaterial(xpsSettings, rootDir, mesh_da, meshInfo, flags):
 
     # Check if material exists
     for mat in bpy.data.materials:
-        print(mat.name)
         if mat.name == matName:
             materialData = mat
 
@@ -352,7 +351,7 @@ def fh_shader_group():
         return bpy.data.node_groups[FH_SHADER_NODE]
 
     addon_dir = os.path.dirname(os.path.realpath(__file__))
-    lib_path = os.path.join(addon_dir, "resources", "ForHonorShader3.blend")
+    lib_path = os.path.join(addon_dir, "resources", "ForHonorShader.blend")
 
     # Append the node group
     with bpy.data.libraries.load(lib_path, link=False) as (data_from, data_to):

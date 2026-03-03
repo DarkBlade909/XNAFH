@@ -278,10 +278,7 @@ def createArmature():
         print('Import armature', str(boneCount), 'bones')
 
         armature_da = bpy.data.armatures.new("Armature")
-        if xpsSettings.prettyBones:
-            armature_da.display_type = 'OCTAHEDRAL'
-        else:
-            armature_da.display_type = 'STICK'
+        armature_da.display_type = 'STICK'
         armature_ob = bpy.data.objects.new("Armature", armature_da)
         armature_ob.show_in_front = True
 
@@ -308,25 +305,15 @@ def importBones(armature_ob):
             editBone.head, editBone.tail = (0,0,0), (0, 0.1, 0)
             editBone.matrix = mathutils.Matrix.Translation(locate) @ quat
 
+            # Pretty bones
             if xpsSettings.prettyBones and bone.name not in anchor_bones:
-                # # local axes of the bone
-                # x, y, z = editBone.matrix.to_3x3().col
-                # # rotation matrix 30 degrees around local x axis thru head
-                # R = (Matrix.Translation(editBone.head) @
-                #     Matrix.Rotation(radians(-90), 4, z) @
-                #     Matrix.Translation(-editBone.head)
-                #     )
-                # #bone.matrix = R @ bone.matrix
-                # editBone.transform(R) 
-
-                
+                # Rotate
                 old_head = editBone.head.copy()
                 R = Matrix.Rotation(radians(-90), 4, editBone.z_axis.normalized())   
                 editBone.transform(R, roll=True) 
                 offset_vec = -(editBone.head - old_head)
                 editBone.head += offset_vec
                 editBone.tail += offset_vec
-            
 
             addBoneName(editBone.name)
 
@@ -497,6 +484,7 @@ def importMesh(armature_ob, meshInfo):
         makeVertexGroups(mesh_ob, vertices)
 
         if armature_ob:
+            scaleBones(armature_ob)
             makeBoneGroups(armature_ob, mesh_ob)
 
         verts_nor = xpsSettings.importNormals
@@ -638,6 +626,27 @@ def makeBoneGroups(armature_ob, mesh_ob):
             pose_bone.bone.layers[layer_index] = True
 
             pose_bone.bone_group = bone_group
+
+def scaleBones(armature_ob):
+    if armature_ob:
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        arm_data = armature_ob.data
+        editBones = arm_data.edit_bones
+
+        for bone in editBones:
+            distance = 0.025
+            if bone.name == "Reference":
+                bone.length = distance
+            else:
+                for child in bone.children:
+                    if child.name[1] != '_' and child.name[2] != '_':
+                        distance = (child.head - bone.head).length
+                if distance > 0.025:
+                    bone.length = distance
+                else:
+                    bone.length = 0.025
+
 
 def placeOrnament(armature_ob, obj):
     slots = ['A','B','C','Rank']
