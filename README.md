@@ -2,6 +2,7 @@ XNAFH
 =========
 
 Fork of XNALara Mesh import/export tool to import For Honor .ascii files.
+Supports Blender 3.6-5.0+
 
 Original addon by XNALara community.
 
