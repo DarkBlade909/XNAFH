@@ -106,6 +106,12 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
         default=True,
     )
 
+    skipSim: bpy.props.BoolProperty(
+        name="Skip Cloth Sim Meshes",
+        description="Skip importing proxy cloth simulation meshes",
+        default=False,
+    )
+
     prettyBones: bpy.props.BoolProperty(
         name="Pretty Bones",
         description="Set Pretty Bones",
@@ -136,6 +142,7 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
             self.uvDisplX,
             self.uvDisplY,
             self.impDefPose,
+            self.skipSim,
             self.joinMeshRips,
             self.markSeams and self.joinMeshRips,
             self.vColors,
@@ -162,6 +169,7 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
         sub.prop(self, "markSeams")
         col.prop(self, "importNormals")
         col.prop(self, "vColors")
+        col.prop(self, "skipSim")
 
         sub.enabled = self.joinMeshRips
         self.markSeams = self.joinMeshRips and self.markSeams

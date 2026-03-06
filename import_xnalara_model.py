@@ -108,6 +108,10 @@ def makeMesh(meshFullName):
     mesh_ob = bpy.data.objects.new(mesh_da.name, mesh_da)
     print('Create mesh: {}'.format(meshFullName))
     print('New mesh = {}'.format(mesh_da.name))
+
+    # Custom Property name length 
+    mesh_ob["name"] = meshFullName
+
     return mesh_ob
 
 def linkToCollection(collection, obj):
@@ -143,6 +147,7 @@ def xpsImport():
     for obj in meshes_obs:
         linkToCollection(new_collection, obj)
         markSelected(obj)
+        setupCloth(obj)
         if armature_ob:
             placeOrnament(armature_ob, obj)
             placeWeapon(armature_ob, obj)
@@ -405,7 +410,10 @@ def makeVertexDict(vertexDict, mergedVertList, uvLayers, vertColor, vertices):
 
 def importMesh(armature_ob, meshInfo):
     useSeams = xpsSettings.markSeams
+    skipSim = xpsSettings.skipSim
     meshFullName = meshInfo.name
+    if skipSim and meshFullName.lower().endswith("sim"):
+        return
     print()
     print('---*** Import mesh {} ***---'.format(meshFullName))
 
@@ -652,15 +660,15 @@ def placeOrnament(armature_ob, obj):
     slots = ['A','B','C','Rank']
     constraint = None
     if obj:
-        match = obj.name.find("_Ornament_")
+        match = obj["name"].find("_Ornament_")
         if match > 0:
             print(f'Placing ornament: {obj.name}')
 
             # Get Slot
-            if obj.name[-4:].lower() == "rank": # Rank slot
+            if obj["name"][-4:].lower() == "rank": # Rank slot
                 slot = "Rank"
             else: # Letter slot
-                slot = obj.name[-1].upper()
+                slot = obj["name"][-1].upper()
 
             if slot not in slots:
                 print(f"Couldn't find ornament slot {slot}, defaulting to A")
@@ -689,20 +697,22 @@ def placeWeapon(armature_ob, obj):
     anchor_bone = None
     constraint = None
     if obj:
-        match = obj.name.find("_Weapon")
-        if match > 0:
-            print(f'Placing weapon: {obj.name}')
+        match = obj["name"].find("_Weapon")
+        match2 = obj["name"].find("_GearWeapon")
+        anchor_bone = "RightHand_Weapon_Ref"
+        if match > 0 or match2 > 0:
+            print(f'Placing weapon: {obj["name"]}')
 
             # Get Slot
-            match_hand = obj.name.find("_RHand_")
+            match_hand = obj["name"].find("_RHand_")
             if match_hand > 0:
                 anchor_bone = "RightHand_Weapon_Ref"
             else:
-                match_hand = obj.name.find("_LHand_")
+                match_hand = obj["name"].find("_LHand_")
                 if match_hand > 0:
                     anchor_bone = "LeftHand_Weapon_Ref"
                 else:
-                    match_hand = obj.name.find("_SHand_")
+                    match_hand = obj["name"].find("_SHand_")
                     if match_hand > 0:
                         anchor_bone = "LeftHand_Weapon_Ref"
 
@@ -724,4 +734,11 @@ def placeWeapon(armature_ob, obj):
         else:
             return None
 
-        
+def setupCloth(obj):
+    if not xpsSettings.skipSim:
+        if obj:
+            # if obj.name.lower().endswith("sim"):
+            if obj["name"].lower().endswith("sim"): # Use custom property instead of name for 4.2/3.6 support
+                obj.display_type = 'WIRE'
+                obj.hide_render = True
+                obj.hide_viewport = True

@@ -110,6 +110,7 @@ class XpsImportSettings:
             uvDisplX,
             uvDisplY,
             importDefaultPose,
+            skipSim,
             joinMeshRips,
             markSeams,
             vColors,
@@ -119,6 +120,7 @@ class XpsImportSettings:
         self.uvDisplX = uvDisplX
         self.uvDisplY = uvDisplY
         self.importDefaultPose = importDefaultPose
+        self.skipSim = skipSim
         self.joinMeshRips = joinMeshRips
         self.markSeams = markSeams
         self.vColors = vColors

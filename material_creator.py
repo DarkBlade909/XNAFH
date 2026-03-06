@@ -224,10 +224,10 @@ def loadImage(material, texname, search_dir):
             
             ### Avoid reloading if already in Blender
             # Blender 3/4 (Character limit is 63)
-            if bpy.app.version < (5, 0, 0):
-                existing = bpy.data.images.get(name[:63])
-                if existing:
-                    return existing
+            for im in bpy.data.images:
+                imageName = im.filepath[11:-4]
+                if imageName == name:
+                    return im
             # Blender 5 (Character limit is 255)
             else:
                 existing = bpy.data.images.get(name)
@@ -335,7 +335,8 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
 
     node_tree.links.new(xpsShadeNode.outputs['BSDF'], ouputNode.inputs['Surface'])
 
-    create_inputs(materialData, xpsSettings)
+    if not meshInfo.name.lower().endswith("sim"):
+        create_inputs(materialData, xpsSettings)
 
 def find_fh_shader_node(material):
     node_tree = material.node_tree
