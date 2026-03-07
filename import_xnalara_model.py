@@ -326,16 +326,6 @@ def importBones(armature_ob):
             editBone.head, editBone.tail = (0,0,0), (0, 0.1, 0)
             editBone.matrix = mathutils.Matrix.Translation(locate) @ quat
 
-            # Pretty bones
-            if xpsSettings.prettyBones and bone.name not in anchor_bones:
-                # Rotate
-                old_head = editBone.head.copy()
-                R = Matrix.Rotation(radians(-90), 4, editBone.z_axis.normalized())   
-                editBone.transform(R, roll=True) 
-                offset_vec = -(editBone.head - old_head)
-                editBone.head += offset_vec
-                editBone.tail += offset_vec
-
             addBoneName(editBone.name)
 
         # Blender 4.x+
@@ -662,17 +652,31 @@ def scaleBones(armature_ob):
         editBones = arm_data.edit_bones
 
         for bone in editBones:
-            distance = 0.025
-            if bone.name == "Reference":
-                bone.length = distance
-            else:
-                for child in bone.children:
-                    if child.name[1] != '_' and child.name[2] != '_':
-                        distance = (child.head - bone.head).length
-                if distance > 0.025:
+            # Pretty bones
+            if xpsSettings.prettyBones:
+                # Rotate
+                if bone.name not in anchor_bones:
+                    old_head = bone.head.copy()
+                    R = Matrix.Rotation(radians(-90), 4, bone.z_axis.normalized())   
+                    bone.transform(R, roll=True) 
+                    offset_vec = -(bone.head - old_head)
+                    bone.head += offset_vec
+                    bone.tail += offset_vec
+            
+                # Scale
+                distance = 0.025
+                if bone.name == "Reference":
                     bone.length = distance
                 else:
-                    bone.length = 0.025
+                    for child in bone.children:
+                        if child.name[1] != '_' and child.name[2] != '_':
+                            distance = (child.head - bone.head).length
+                    if distance > 0.025:
+                        bone.length = distance
+                    else:
+                        bone.length = 0.025
+        
+
 
 def applyPose(bone):
     if bone:
