@@ -10,11 +10,12 @@ from . import read_ascii_xps
 from . import read_bin_xps
 from . import xps_types
 from . import material_creator
+from . import read_smd
 
 import math
 import mathutils
 from math import radians
-from mathutils import Vector
+from mathutils import Vector, Euler
 from mathutils import Matrix
 
 rootDir = ''
@@ -22,6 +23,7 @@ blenderBoneNames = []
 MIN_BONE_LENGHT = 0.005
 xpsData = None
 xpsSettings = None
+smdData = None
 
 anchor_bones = [
     "RightHand_Weapon_Ref",
@@ -103,6 +105,13 @@ def loadXpsFile(filename):
         xpsData = None
     return xpsData
 
+def loadSMDFile(filename):
+    dirpath, file = os.path.split(filename)
+    basename, ext = os.path.splitext(file)
+    smd_dir = os.path.join(dirpath, basename[:-3] + 'skel.smd')
+    smdData = read_smd.readSMDanim(smd_dir)
+    return smdData
+
 def makeMesh(meshFullName):
     mesh_da = bpy.data.meshes.new(meshFullName)
     mesh_ob = bpy.data.objects.new(mesh_da.name, mesh_da)
@@ -118,7 +127,7 @@ def linkToCollection(collection, obj):
     collection.objects.link(obj)
 
 def xpsImport():
-    global rootDir, xpsData
+    global rootDir, xpsData, smdData
 
     print("------------------------------------------------------------")
     print("---------------Executing XPS Python Importer----------------")
@@ -129,8 +138,15 @@ def xpsImport():
     print('Root directory: {}'.format(rootDir))
 
     xpsData = loadXpsFile(xpsSettings.filename)
+    smdData = loadSMDFile(xpsSettings.filename)
     if not xpsData:
         return '{NONE}'
+
+    # for bone in smdData.bones:
+    #     print(bone.name)
+
+    # for frame in smdData.frames:
+    #     print(frame.id)
 
     fname, fext = os.path.splitext(file)
     new_collection = bpy.data.collections.new(fname)
@@ -348,6 +364,9 @@ def importBones(armature_ob):
             if bone.parentId >= 0:
                 editBone = editBones[bone.id]
                 editBone.parent = editBones[bone.parentId]
+            # Apply rest pose
+            if xpsSettings.importPose:
+                applyPose(editBone)
 
     finally:
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -655,6 +674,23 @@ def scaleBones(armature_ob):
                 else:
                     bone.length = 0.025
 
+def applyPose(bone):
+    if bone:
+        for animBone in smdData.bones:
+            if animBone.name.lower() == bone.name.lower():
+                boneID = animBone.id
+                for keyframe in smdData.frames:
+                    if keyframe.id == boneID:
+                        boneParent = bone.parent
+
+                        rot = Euler([float(keyframe.rot_x), float(keyframe.rot_y), float(keyframe.rot_z)])
+                        pos = Vector([float(keyframe.x), float(keyframe.y), float(keyframe.z)])
+
+                        matrix = Matrix.Translation(pos) @ rot.to_matrix().to_4x4()
+                        if boneParent:
+                            bone.matrix = bone.parent.matrix @ matrix
+                        else:
+                            bone.matrix = matrix
 
 def placeOrnament(armature_ob, obj):
     slots = ['A','B','C','Rank']

@@ -115,7 +115,8 @@ class XpsImportSettings:
             markSeams,
             vColors,
             prettyBones,
-            importNormals):
+            importNormals,
+            importPose):
         self.filename = filename
         self.uvDisplX = uvDisplX
         self.uvDisplY = uvDisplY
@@ -126,6 +127,7 @@ class XpsImportSettings:
         self.vColors = vColors
         self.prettyBones = prettyBones
         self.importNormals = importNormals
+        self.importPose = importPose
 
 
 class XpsExportSettings:

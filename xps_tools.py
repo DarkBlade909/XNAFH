@@ -124,6 +124,12 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
         default=True,
     )
 
+    importPose: bpy.props.BoolProperty(
+        name="Import Rest Pose",
+        description="Import rest pose from .smd file",
+        default=True,
+    )
+
     # Only needed if you want to add into a dynamic menu
     def menu_func(self, context):
         self.layout.operator_context = 'INVOKE_DEFAULT'
@@ -147,7 +153,8 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
             self.markSeams and self.joinMeshRips,
             self.vColors,
             self.prettyBones,
-            self.importNormals
+            self.importNormals,
+            self.importPose
         )
         material_creator.create_group_nodes()
         status = import_xnalara_model.getInputFilename(xpsSettings)
@@ -178,6 +185,7 @@ class Import_FH_Model_Op(bpy.types.Operator, ImportHelper):
         col.label(text='Armature')
         col.prop(self, "impDefPose")
         col.prop(self, "prettyBones")
+        col.prop(self, "importPose")
 
 
 class Export_Xps_Model_Op(bpy.types.Operator, CustomExportHelper):
