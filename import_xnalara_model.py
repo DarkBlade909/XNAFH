@@ -357,6 +357,10 @@ def importBones(armature_ob):
             # Apply rest pose
             if xpsSettings.importPose:
                 applyPose(editBone)
+        for bone in bones:
+            editBone = editBones[bone.id]
+            if xpsSettings.prettyBones:
+                scaleBones(editBone)
 
     finally:
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -501,7 +505,6 @@ def importMesh(armature_ob, meshInfo):
         makeVertexGroups(mesh_ob, vertices)
 
         if armature_ob:
-            scaleBones(armature_ob)
             makeBoneGroups(armature_ob, mesh_ob)
 
         verts_nor = xpsSettings.importNormals
@@ -644,37 +647,29 @@ def makeBoneGroups(armature_ob, mesh_ob):
 
             pose_bone.bone_group = bone_group
 
-def scaleBones(armature_ob):
-    if armature_ob:
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        arm_data = armature_ob.data
-        editBones = arm_data.edit_bones
-
-        for bone in editBones:
-            # Pretty bones
-            if xpsSettings.prettyBones:
-                # Rotate
-                if bone.name not in anchor_bones:
-                    old_head = bone.head.copy()
-                    R = Matrix.Rotation(radians(-90), 4, bone.z_axis.normalized())   
-                    bone.transform(R, roll=True) 
-                    offset_vec = -(bone.head - old_head)
-                    bone.head += offset_vec
-                    bone.tail += offset_vec
-            
-                # Scale
-                distance = 0.025
-                if bone.name == "Reference":
-                    bone.length = distance
-                else:
-                    for child in bone.children:
-                        if child.name[1] != '_' and child.name[2] != '_':
-                            distance = (child.head - bone.head).length
-                    if distance > 0.025:
-                        bone.length = distance
-                    else:
-                        bone.length = 0.025
+def scaleBones(bone):
+    if bone:
+        # Rotate
+        if bone.name not in anchor_bones:
+            old_head = bone.head.copy()
+            R = Matrix.Rotation(radians(-90), 4, bone.z_axis.normalized())   
+            bone.transform(R, roll=True) 
+            offset_vec = -(bone.head - old_head)
+            bone.head += offset_vec
+            bone.tail += offset_vec
+    
+        # Scale
+        distance = 0.025
+        if bone.name == "Reference":
+            bone.length = distance
+        else:
+            for child in bone.children:
+                if child.name[1] != '_' and child.name[2] != '_':
+                    distance = (child.head - bone.head).length
+            if distance > 0.025:
+                bone.length = distance
+            else:
+                bone.length = 0.025
         
 
 
