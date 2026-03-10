@@ -223,16 +223,14 @@ def loadImage(material, texname, search_dir):
             directory, file = os.path.split(full_path)
             
             ### Avoid reloading if already in Blender
-            # Blender 3/4 (Character limit is 63)
             for im in bpy.data.images:
-                imageName = im.filepath[11:-4]
-                if imageName == name:
-                    return im
-            # Blender 5 (Character limit is 255)
-            else:
-                existing = bpy.data.images.get(name)
-                if existing:
-                    return existing
+                try:
+                    if im["name"] == name:
+                        return im
+                    else:
+                        pass
+                except:
+                    pass
             
             # DDS
             if ext.lower() == ".dds":
@@ -251,11 +249,16 @@ def loadImage(material, texname, search_dir):
                 if not new_images:
                     raise RuntimeError("DDS import did not create an image")
 
-                return new_images.pop()
+                image = new_images.pop()
+
+                image["name"] = name
+                return image
 
             # PNG
             else:
-                return bpy.data.images.load(full_path)
+                image = bpy.data.images.load(full_path)
+                image["name"] = name
+                return image
 
     # No texture found, load default
     print(f"[ImageLoader] No texture found with name {target_name} in {search_dir}")
